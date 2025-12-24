@@ -22,14 +22,17 @@ import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.SharedSuggestionProvider;
+import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.level.TicketType;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.projectile.ProjectileUtil;
+import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.EntityHitResult;
@@ -53,11 +56,11 @@ public class PuppetManager {
             float originalHealth // of the player
     ) {}
 
-    private static final Map<UUID, PossessionSession> activePossessions = new ConcurrentHashMap<>();
-    private static final Map<UUID, LinkedList<UUID>> recentNpcs = new ConcurrentHashMap<>();
     private static final int MAX_HISTORY = 5;
     private static final double REACH_DISTANCE = 10.0; // How far away to detect NPCs
     private static final float FOLLOW_STOP_DISTANCE = 2.7f; // Distance to stop when following
+    public static final TicketType<UUID> POSSESSION_TICKET = TicketType
+            .create("possession", Comparator.comparing(UUID::toString));
     private static final Map<Action, String> actionPermissions = Map.of(
             Action.DELETE, "delete",
             Action.MOVE_HERE, "move",
@@ -66,6 +69,8 @@ public class PuppetManager {
             Action.FOLLOW, "follow",
             Action.UNFOLLOW, "follow"
     );
+    private static final Map<UUID, PossessionSession> activePossessions = new ConcurrentHashMap<>();
+    private static final Map<UUID, LinkedList<UUID>> recentNpcs = new ConcurrentHashMap<>();
 
     public static void init() {
         ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> {
@@ -346,6 +351,9 @@ public class PuppetManager {
         npc.setInvulnerable(true);
         npc.teleportTo(level, npc.getX(), -1000, npc.getZ(), Set.of(), npc.getYRot(), npc.getXRot());
 
+        setChunkLoaded(level, dummy.position(), player.getUUID(), true);
+        setChunkLoaded(level, npc.position(), player.getUUID(), true);
+
         // Record Session
         activePossessions.put(player.getUUID(), new PossessionSession(
                 dummy.getUUID(),
@@ -491,5 +499,15 @@ public class PuppetManager {
             return living;
         }
         return null;
+    }
+
+    private static void setChunkLoaded(ServerLevel level, Vec3 pos, UUID lockId, boolean loaded) {
+        if (level == null) return;
+        ChunkPos chunkPos = new ChunkPos(BlockPos.containing(pos));
+        if (loaded) {
+            level.getChunkSource().addRegionTicket(POSSESSION_TICKET, chunkPos, 2, lockId);
+        } else {
+            level.getChunkSource().removeRegionTicket(POSSESSION_TICKET, chunkPos, 2, lockId);
+        }
     }
 }
