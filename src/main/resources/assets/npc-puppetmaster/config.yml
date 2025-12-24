@@ -1,0 +1,9 @@
+# Whether Easy NPCs are controllable puppets by default (meaning players with permissions can control them)
+# Either way, you can make an exception via /editpuppet <npcEntity> ispuppet <true|false>
+npcs_are_puppets_by_default: true
+
+# Whether to enable debug logging
+enable_debug: false
+
+# Do not change this value unless you know what you are doing!
+config_version: 1

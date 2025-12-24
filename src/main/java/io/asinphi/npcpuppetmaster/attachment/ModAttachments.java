@@ -1,0 +1,26 @@
+package io.asinphi.npcpuppetmaster.attachment;
+
+import com.mojang.serialization.Codec;
+import io.asinphi.npcpuppetmaster.NPCPuppetmaster;
+import net.fabricmc.fabric.api.attachment.v1.AttachmentRegistry;
+import net.fabricmc.fabric.api.attachment.v1.AttachmentType;
+import net.minecraft.resources.ResourceLocation;
+
+@SuppressWarnings("UnstableApiUsage")
+public class ModAttachments {
+
+    public static final AttachmentType<Boolean> IS_PUPPET = AttachmentRegistry.createPersistent(
+            ResourceLocation.fromNamespaceAndPath(NPCPuppetmaster.MOD_ID, "is_puppet"),
+            Codec.BOOL
+    );
+
+    // Default: Empty (No special permission required)
+    public static final AttachmentType<String> REQUIRES_PERMISSION = AttachmentRegistry.createPersistent(
+            ResourceLocation.fromNamespaceAndPath(NPCPuppetmaster.MOD_ID, "requires_permission"),
+            Codec.STRING
+    );
+
+    public static void init() {
+        // Class loading triggers static initializers above
+    }
+}

@@ -1,0 +1,52 @@
+commands:
+  help: |-
+    <#4e46c2><strikethrough>                          </strikethrough></#4e46c2> <#ad60e0>Commands</#ad60e0> <#4e46c2><strikethrough>                          </strikethrough></#4e46c2>
+    <gray><italic>    Hover a command for extra info, click to run.</italic></gray>
+
+    <click:suggest_command:'/npcavatar upload '><hover:show_text:'<white>/npcavatar upload <gold><id></gold> <#ad60e0>[path]</#ad60e0></white><newline><newline><gray>Upload an avatar from your currently equipped avatar or Figura avatars folder to the server.</gray><newline><newline><gray>Prefer applying uploaded avatars for those that you apply to multiple entities.</gray><newline><newline><gray><gold>id</gold>:</gray> <gray>Avatar identifier (namespace optional).</gray><newline><gray><#ad60e0>[path]</#ad60e0>:</gray> <gray>Optional Figura-relative path; uses your current avatar if unspecified.</gray><newline><newline><dark_gray>Permission:</dark_gray> <gray>npcavatar.upload</gray>'><#ad60e0>  /npcavatar upload</#ad60e0> <gray>-</gray> <white>Upload an avatar to the server.</white></hover></click>
+    <click:suggest_command:'/npcavatar apply '><hover:show_text:'<white>/npcavatar apply <gold><avatarId></gold> <#ad60e0>[target]</#ad60e0></white><newline><newline><gray>Apply an uploaded avatar to the entity you\'re looking at (up to 10 blocks) or the specified entities.</gray><newline><newline><dark_gray>Permission:</dark_gray> <gray>npcavatar.apply</gray>'><#ad60e0>  /npcavatar apply</#ad60e0> <gray>-</gray> <white>Apply an avatar to entities.</white></hover></click>
+    <click:suggest_command:'/npcavatar copy '><hover:show_text:'<white>/npcavatar copy <gold><source></gold> <#ad60e0>[targets]</#ad60e0></white><newline><newline><gray>Copy an entity\'s current avatar to the entity you\'re looking at (up to 10 blocks) or the specified entities.</gray><newline><newline><dark_gray>Permission:</dark_gray> <gray>npcavatar.apply</gray>'><#ad60e0>  /npcavatar copy</#ad60e0> <gray>-</gray> <white>An avatar from one entity to another.</white></hover></click>
+    <click:suggest_command:'/npcavatar copyfromplayer '><hover:show_text:'<white>/npcavatar copyfromplayer <gold><player></gold> <#ad60e0>[targets]</#ad60e0></white><newline><newline><gray>Copy a player\'s current avatar to the entity you\'re looking at (up to 10 blocks) or the specified entities.</gray><newline><newline><dark_gray>Permission:</dark_gray> <gray>npcavatar.apply</gray>'><#ad60e0>  /npcavatar copyfromplayer</#ad60e0> <gray>-</gray> <white>Apply a player’s avatar.</white></hover></click>
+    <click:suggest_command:'/npcavatar clear'><hover:show_text:'<white>/npcavatar clear <#ad60e0>[target]</#ad60e0></white><newline><newline><gray>Clear an applied avatar from the entity you\'re looking at (up to 10 blocks) or the specified entities.</gray><newline><newline><dark_gray>Permission:</dark_gray> <gray>npcavatar.apply</gray>'><#ad60e0>  /npcavatar clear</#ad60e0> <gray>-</gray> <white>Clear an avatar from an entity</white></hover></click>
+    <click:run_command:'/npcavatar reload'><hover:show_text:'<white>/npcavatar reload</white><newline><newline><gray>Reload configuration and language files.</gray><newline><newline><dark_gray>Permission:</dark_gray> <gray>npcavatar.reload</gray>'><#ad60e0>  /npcavatar reload</#ad60e0> <gray>-</gray> <white>Reload the plugin.</white></hover></click>
+
+  common:
+    no_entity_in_sight: "<prefixes.error>No entity in sight."
+    no_targets_matched: "<prefixes.error>No targets matched."
+
+  editpuppet:
+    is_puppet:
+      success: "<prefixes.success>NPC <yellow><target></yellow> now has its puppet controls <enabled>."
+    permission:
+      cleared: "<prefixes.success>NPC <yellow><target></yellow> no longer requires a special permission to control."
+      success: "<prefixes.success>NPC <yellow><target></yellow> now requires permission <yellow><permission></yellow> to be controlled."
+
+  reload:
+    completed: "<prefixes.success>Reload complete."
+
+possess:
+  success: "<prefixes.success>You are now possessing NPC <yellow><target></yellow>. Use <yellow>/unpossess</yellow> to stop possessing."
+  no_avatar_override: "<prefixes.error>This NPC is not able to be possessed."
+  end: "<prefixes.success>You have stopped possessing NPC <yellow><target></yellow>."
+  forced_end: "<prefixes.warn>Your control of <yellow><target></yellow> has been forcefully interrupted."
+  not_possessing: "<prefixes.error>You are not currently possessing any NPC."
+
+not_a_puppet: "<prefixes.error>Target entity is not a controllable puppet NPC."
+no_permission: "<prefixes.error>You do not have permission to perform this operation."
+require_permission: "<prefixes.error>You require permission <yellow><permission></yellow> to perform this operation."
+
+global_placeholders:
+  # Brand prefix (optional; not automatically included in status prefixes unless you add it)
+  prefix: "<gray>[<gradient:#9339bd:#4e46c2>NPC Puppetmaster</gradient>]</gray> "
+
+  prefixes:
+    info: "<dark_gray><bold>[</bold><blue><bold>i</bold></blue><dark_gray><bold>]</bold></dark_gray> <gray>"
+    success: "<dark_gray><bold>[</bold><dark_green><bold>✔</bold></dark_green><dark_gray><bold>]</bold></dark_gray> <gray>"
+    warn: "<dark_gray><bold>[</bold><gold><bold>!</bold></gold><dark_gray><bold>]</bold></dark_gray> <gold>"
+    error: "<dark_gray><bold>[</bold><dark_red><bold>X</bold></dark_red><dark_gray><bold>]</bold></dark_gray> <red>"
+    question: "<dark_gray><bold>[</bold><green><bold>?</bold></green><dark_gray><bold>]</bold></dark_gray> <gray>"
+    announce: "<dark_gray><bold>[</bold><dark_purple><bold>!</bold></dark_purple><dark_gray><bold>]</bold></dark_gray> <light_purple>"
+
+  symbols:
+    right_arrow: "→"
+    bullet: "•"

@@ -1,0 +1,11 @@
+{
+	"required": true,
+	"package": "io.asinphi.npcpuppetmaster.mixin.client",
+	"compatibilityLevel": "JAVA_21",
+	"client": [
+      "AbstractZombieModelMixin"
+	],
+	"injectors": {
+		"defaultRequire": 1
+	}
+}

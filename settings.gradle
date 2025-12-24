@@ -1,0 +1,17 @@
+pluginManagement {
+	repositories {
+
+		maven {
+			name = 'Fabric'
+			url = 'https://maven.fabricmc.net/'
+		}
+		mavenCentral()
+		gradlePluginPortal()
+	}
+}
+
+includeBuild("../NPCAvatar") {
+	dependencySubstitution {
+		substitute module("io.asinphi:npc-avatar") using project(":")
+	}
+}
