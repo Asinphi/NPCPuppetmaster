@@ -7,7 +7,7 @@ import com.mojang.brigadier.context.CommandContext;
 import de.markusbordihn.easynpc.commands.arguments.EasyNPCArgument;
 import io.asinphi.npcpuppetmaster.attachment.ModAttachments;
 import io.asinphi.npcpuppetmaster.config.Lang;
-import io.asinphi.npcpuppetmaster.util.PermissionUtil;
+import me.lucko.fabric.api.permissions.v0.Permissions;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
@@ -17,8 +17,7 @@ public class EditPuppetCommand {
 
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
         dispatcher.register(Commands.literal("editpuppet")
-                .requires(source ->
-                        PermissionUtil.check(source, "npcp.edit", 2))
+                .requires(Permissions.require("npcp.edit", 2))
                 .then(Commands.argument("target", EasyNPCArgument.npc())
                         .then(Commands.literal("ispuppet")
                                 .then(Commands.argument("enabled", BoolArgumentType.bool())

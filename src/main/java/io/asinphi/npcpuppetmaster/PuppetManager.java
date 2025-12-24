@@ -12,9 +12,9 @@ import io.asinphi.npcpuppetmaster.config.Config;
 import io.asinphi.npcpuppetmaster.config.Lang;
 import io.asinphi.npcpuppetmaster.entity.ModEntities;
 import io.asinphi.npcpuppetmaster.entity.PlayerDummyEntity;
-import io.asinphi.npcpuppetmaster.util.PermissionUtil;
 import io.asinphi.payload.OpenGuiPayload;
 import io.asinphi.payload.OpenSelectorGuiPayload;
+import me.lucko.fabric.api.permissions.v0.Permissions;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
@@ -113,7 +113,7 @@ public class PuppetManager {
         String specialNode = target.getAttached(ModAttachments.REQUIRES_PERMISSION);
         if (specialNode != null && !specialNode.isEmpty()) {
             String specialPermission = "npcp.puppeteer.special." + specialNode + ".use";
-            if (!PermissionUtil.check(player, specialPermission, 2)) {
+            if (!Permissions.check(player, specialPermission, 2)) {
                 Lang.send(player, "require_permission", Placeholder.unparsed("permission", specialPermission));
                 return;
             }
@@ -205,14 +205,14 @@ public class PuppetManager {
             String specialNode = entity.getAttached(ModAttachments.REQUIRES_PERMISSION);
             if (specialNode != null && !specialNode.isEmpty()) {
                 String specialPermission = "npcp.puppeteer.special." + specialNode + "." + actionPermission;
-                if (!PermissionUtil.check(player, specialPermission, 2)) {
+                if (!Permissions.check(player, specialPermission, 2)) {
                     Lang.send(player, "require_permission", Placeholder.unparsed("permission", specialPermission));
                     return;
                 }
             }
 
             String permission = "npcp.puppeteer.action." + actionPermission;
-            if (!PermissionUtil.check(player, permission, 2)) {
+            if (!Permissions.check(player, permission, 2)) {
                 Lang.send(player, "require_permission", Placeholder.unparsed("permission", permission));
                 return;
             }

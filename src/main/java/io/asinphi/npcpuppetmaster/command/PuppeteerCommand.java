@@ -4,7 +4,7 @@ import com.mojang.brigadier.CommandDispatcher;
 import de.markusbordihn.easynpc.commands.arguments.EasyNPCArgument;
 import io.asinphi.npcpuppetmaster.PuppetManager;
 import io.asinphi.npcpuppetmaster.action.Action;
-import io.asinphi.npcpuppetmaster.util.PermissionUtil;
+import me.lucko.fabric.api.permissions.v0.Permissions;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.server.level.ServerPlayer;
@@ -14,8 +14,7 @@ public class PuppeteerCommand {
 
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
         dispatcher.register(Commands.literal("puppeteer")
-                .requires(source ->
-                        PermissionUtil.check(source, "npcp.puppeteer.use", 2))
+                .requires(Permissions.require("npcp.puppeteer.use", 2))
                 .executes(context -> {
                     ServerPlayer player = context.getSource().getPlayerOrException();
                     PuppetManager.openSelectorGui(player);
