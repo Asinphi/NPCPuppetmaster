@@ -52,6 +52,7 @@ public class PuppetManager {
             // Original State Preservation
             boolean wasInvisible,
             boolean wasInvulnerable,
+            boolean wasNoGravity,
             float originalHealth // of the player
     ) {}
 
@@ -311,13 +312,9 @@ public class PuppetManager {
 
         ServerLevel level = (ServerLevel) player.level();
 
-        // Capture Original State
-        boolean originalNoAi = false;
-        if (npc instanceof Mob mob) {
-            originalNoAi = mob.isNoAi();
-        }
         boolean originalInvisible = npc.isInvisible();
         boolean originalInvulnerable = npc.isInvulnerable();
+        boolean originalNoGravity = npc.isNoGravity();
 
         // Spawn Dummy at Player's Location
         PlayerDummyEntity dummy = ModEntities.PLAYER_DUMMY.create(level);
@@ -347,7 +344,9 @@ public class PuppetManager {
         }
         npc.setInvisible(true);
         npc.setInvulnerable(true);
-        npc.teleportTo(level, npc.getX(), -1000, npc.getZ(), Set.of(), npc.getYRot(), npc.getXRot());
+        npc.setNoGravity(true);
+        npc.teleportTo(level, npc.getX(), level.getMaxBuildHeight() + 100, npc.getZ(), Set.of(), npc.getYRot(),
+                npc.getXRot());
 
         setChunkLoaded(level, dummy.position(), player.getUUID(), true);
         setChunkLoaded(level, npc.position(), player.getUUID(), true);
@@ -360,6 +359,7 @@ public class PuppetManager {
                 level.dimension(), // NPC Dim (Initially same as player)
                 originalInvisible,
                 originalInvulnerable,
+                originalNoGravity,
                 player.getHealth()
         ));
 
@@ -390,6 +390,7 @@ public class PuppetManager {
                 // Restore Flags
                 npc.setInvisible(session.wasInvisible());
                 npc.setInvulnerable(session.wasInvulnerable());
+                npc.setNoGravity(session.wasNoGravity());
             }
         }
 
