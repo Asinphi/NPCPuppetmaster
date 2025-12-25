@@ -39,29 +39,34 @@ public class SelectorGui extends LightweightGuiDescription {
 
         int row = 0;
         for (OpenSelectorGuiPayload.Candidate candidate : candidates) {
+            boolean isPossessed = (candidate.entityId() == possessedEntityId);
+
+            // Get entity
             assert Minecraft.getInstance().level != null;
             Entity entity = Minecraft.getInstance().level.getEntity(candidate.entityId());
 
-            if (entity instanceof LivingEntity living) {
-                boolean isPossessed = (candidate.entityId() == possessedEntityId);
-
-                // Create the custom row widget
-                WEntityRow entry = new WEntityRow(living, isPossessed, !isPossessed ? () -> {
-                    assert Minecraft.getInstance().player != null;
-                    Minecraft.getInstance().player.connection.sendCommand("puppeteer " + candidate.uuid());
-                }: () -> {
-                    assert Minecraft.getInstance().player != null;
-                    Minecraft.getInstance().player.connection.sendCommand("unpossess");
-                    Minecraft.getInstance().setScreen(null);
-                });
-
-                // Add to list
-                // We make it occupy the full width (e.g. 11 slots wide)
-                // Height: 2 slots (roughly 36-40px)
-                listPanel.add(entry, 0, row, 10, 2);
-
-                row += 2; // Move down 2 slots for the next item
+            if (entity == null && !isPossessed) {
+                // Skip entities that are not loaded and not possessed
+                continue;
             }
+
+            // Create the custom row widget
+            WEntityRow entry = new WEntityRow(candidate.name(), entity, isPossessed,
+                    !isPossessed ? () -> {
+                        assert Minecraft.getInstance().player != null;
+                        Minecraft.getInstance().player.connection.sendCommand("puppeteer " + candidate.uuid());
+                    }: () -> {
+                        assert Minecraft.getInstance().player != null;
+                        Minecraft.getInstance().player.connection.sendCommand("unpossess");
+                        Minecraft.getInstance().setScreen(null);
+                    });
+
+            // Add to list
+            // We make it occupy the full width (e.g. 11 slots wide)
+            // Height: 2 slots (roughly 36-40px)
+            listPanel.add(entry, 0, row, 10, 2);
+
+            row += 2; // Move down 2 slots for the next item
         }
 
         // If no NPCs were added to the list, show the help text
@@ -79,14 +84,21 @@ public class SelectorGui extends LightweightGuiDescription {
     }
 
     private static class WEntityRow extends WWidget {
+        private final String name;
         private final LivingEntity entity;
         private final boolean isPossessed;
         private final Runnable onClick;
 
-        public WEntityRow(LivingEntity entity, boolean isPossessed, Runnable onClick) {
-            this.entity = entity;
+        public WEntityRow(String name, Entity entity, boolean isPossessed, Runnable onClick) {
+            this.name = name;
             this.isPossessed = isPossessed;
             this.onClick = onClick;
+
+            if (entity instanceof LivingEntity livingEntity) {
+                this.entity = livingEntity;
+            } else {
+                this.entity = null;
+            }
         }
 
         @Override
@@ -127,33 +139,34 @@ public class SelectorGui extends LightweightGuiDescription {
                 context.fill(x + 1, y + 1, x + getWidth() - 1, y + getHeight() - 1, 0x20FFFFFF);
             }
 
-            // Entity preview
             int boxSize = getHeight();
+
+            // Name text
+            int textX = x + boxSize + 6;
+            int textY = y + (getHeight() / 2) - 4;
+            context.drawString(Minecraft.getInstance().font, name, textX, textY, 0xFFFFFF, true);
+
+            if (isPossessed){
+                String statusText = "Click to cancel possession";
+                context.drawString(Minecraft.getInstance().font, statusText, textX,
+                        textY + 10, 0xb677e0, true);
+            }
+
+            if (entity == null)
+                return;
 
             // We wrap the entity render in our safe Scissor Helper
             runWithScissor(context, x + 1, y + 1, boxSize - 2, getHeight() - 2, () -> {
                 renderEntityInternal(context, x, y, boxSize, mouseX, mouseY);
             });
 
-            // Name text
-            int textX = x + boxSize + 6;
-            int textY = y + (getHeight() / 2) - 4;
-            context.drawString(Minecraft.getInstance().font, entity.getName(), textX, textY, 0xFFFFFF, true);
-
             // Distance/possession status
-            if (Minecraft.getInstance().player != null) {
-                if (isPossessed) {
-                    String statusText = "Click to cancel possession";
-                    context.drawString(Minecraft.getInstance().font, statusText, textX,
-                            textY + 10, 0xb677e0, true);
-                } else {
-
-                    int dist = (int) Minecraft.getInstance().player.distanceTo(entity);
-                    String distText = "(" + dist + "m)";
-                    int distWidth = Minecraft.getInstance().font.width(distText);
-                    context.drawString(Minecraft.getInstance().font, distText, x + getWidth() - distWidth - 5,
-                            y + 5, 0xFFFF55, true);
-                }
+            if (!isPossessed && Minecraft.getInstance().player != null) {
+                int dist = (int) Minecraft.getInstance().player.distanceTo(entity);
+                String distText = "(" + dist + "m)";
+                int distWidth = Minecraft.getInstance().font.width(distText);
+                context.drawString(Minecraft.getInstance().font, distText, x + getWidth() - distWidth - 5,
+                        y + 5, 0xFFFF55, true);
             }
         }
 
