@@ -52,7 +52,7 @@ public class PuppetManager {
             // Original State Preservation
             boolean wasInvisible,
             boolean wasInvulnerable,
-            boolean wasNoGravity,
+            boolean wasNoAi,
             float originalHealth // of the player
     ) {}
 
@@ -314,7 +314,9 @@ public class PuppetManager {
 
         boolean originalInvisible = npc.isInvisible();
         boolean originalInvulnerable = npc.isInvulnerable();
-        boolean originalNoGravity = npc.isNoGravity();
+        boolean originalNoAi = false;
+        if (npc instanceof Mob mob)
+            originalNoAi = mob.isNoAi();
 
         // Spawn Dummy at Player's Location
         PlayerDummyEntity dummy = ModEntities.PLAYER_DUMMY.create(level);
@@ -338,15 +340,14 @@ public class PuppetManager {
 
         // Hide/Store the NPC
         // We move it to the void and disable it, rather than deleting it, to preserve its internal state/UUID.
-        // We also set it to persistent so it doesn't despawn.
-        if (npc instanceof Mob mob) {
-            mob.setPersistenceRequired();
-        }
         npc.setInvisible(true);
         npc.setInvulnerable(true);
-        npc.setNoGravity(true);
         npc.teleportTo(level, npc.getX(), level.getMaxBuildHeight() + 100, npc.getZ(), Set.of(), npc.getYRot(),
                 npc.getXRot());
+        if (npc instanceof Mob mob) {
+            mob.setPersistenceRequired();
+            mob.setNoAi(true);
+        }
 
         setChunkLoaded(level, dummy.position(), player.getUUID(), true);
         setChunkLoaded(level, npc.position(), player.getUUID(), true);
@@ -359,7 +360,7 @@ public class PuppetManager {
                 level.dimension(), // NPC Dim (Initially same as player)
                 originalInvisible,
                 originalInvulnerable,
-                originalNoGravity,
+                originalNoAi,
                 player.getHealth()
         ));
 
@@ -387,7 +388,8 @@ public class PuppetManager {
                 // Restore Flags
                 npc.setInvisible(session.wasInvisible());
                 npc.setInvulnerable(session.wasInvulnerable());
-                npc.setNoGravity(session.wasNoGravity());
+                if (npc instanceof Mob mob)
+                    mob.setNoAi(session.wasNoAi());
 
                 // Teleport NPC to Player's CURRENT location
                 npc.teleportTo(player.serverLevel(), player.getX(), player.getY(), player.getZ(), Set.of(),
