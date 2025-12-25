@@ -380,9 +380,6 @@ public class PuppetManager {
         if (npcLevel != null) {
             entity = npcLevel.getEntity(session.npcUuid());
             if (entity instanceof LivingEntity npc) {
-                // Teleport NPC to Player's CURRENT location
-                npc.teleportTo(player.serverLevel(), player.getX(), player.getY(), player.getZ(), Set.of(), 
-                        player.getYRot(), player.getXRot());
                 npc.setYHeadRot(player.getYHeadRot());
                 npc.setYBodyRot(player.yBodyRot);
                 npc.yHeadRotO = player.getYHeadRot(); // Prevent interpolation glitch
@@ -391,6 +388,10 @@ public class PuppetManager {
                 npc.setInvisible(session.wasInvisible());
                 npc.setInvulnerable(session.wasInvulnerable());
                 npc.setNoGravity(session.wasNoGravity());
+
+                // Teleport NPC to Player's CURRENT location
+                npc.teleportTo(player.serverLevel(), player.getX(), player.getY(), player.getZ(), Set.of(),
+                        player.getYRot(), player.getXRot());
             }
         }
 
