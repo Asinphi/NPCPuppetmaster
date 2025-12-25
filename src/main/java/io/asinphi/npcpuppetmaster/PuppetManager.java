@@ -50,7 +50,6 @@ public class PuppetManager {
             UUID npcUuid,
             ResourceKey<Level> npcDimension,
             // Original State Preservation
-            boolean wasNoAi,
             boolean wasInvisible,
             boolean wasInvulnerable,
             float originalHealth // of the player
@@ -345,7 +344,6 @@ public class PuppetManager {
         // We also set it to persistent so it doesn't despawn.
         if (npc instanceof Mob mob) {
             mob.setPersistenceRequired();
-            mob.setNoAi(true);
         }
         npc.setInvisible(true);
         npc.setInvulnerable(true);
@@ -360,7 +358,6 @@ public class PuppetManager {
                 level.dimension(), // Dummy Dim
                 npc.getUUID(),
                 level.dimension(), // NPC Dim (Initially same as player)
-                originalNoAi,
                 originalInvisible,
                 originalInvulnerable,
                 player.getHealth()
@@ -393,9 +390,6 @@ public class PuppetManager {
                 // Restore Flags
                 npc.setInvisible(session.wasInvisible());
                 npc.setInvulnerable(session.wasInvulnerable());
-                if (npc instanceof Mob mob) {
-                    mob.setNoAi(session.wasNoAi());
-                }
             }
         }
 
