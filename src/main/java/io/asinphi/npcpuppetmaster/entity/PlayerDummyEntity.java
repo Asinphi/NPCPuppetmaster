@@ -15,6 +15,7 @@ import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.ai.control.LookControl;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import org.jetbrains.annotations.NotNull;
@@ -29,7 +30,7 @@ public class PlayerDummyEntity extends PathfinderMob {
 
     public PlayerDummyEntity(EntityType<? extends PathfinderMob> type, Level level) {
         super(type, level);
-        this.setNoAi(true);
+        this.lookControl = new DisabledLookControl(this);
         this.setPersistenceRequired();
 
         // Anti-Dupe: Ensure equipment never drops by default
@@ -41,7 +42,8 @@ public class PlayerDummyEntity extends PathfinderMob {
     public static AttributeSupplier.Builder createAttributes() {
         return Mob.createMobAttributes()
                 .add(Attributes.MAX_HEALTH, 20.0)
-                .add(Attributes.MOVEMENT_SPEED, 0.0);
+                .add(Attributes.MOVEMENT_SPEED, 0.0)
+                .add(Attributes.KNOCKBACK_RESISTANCE, 1.0);
     }
 
     @Override
@@ -102,6 +104,16 @@ public class PlayerDummyEntity extends PathfinderMob {
     }
 
     @Override
+    protected void lerpHeadRotationStep(int lerpHeadSteps, double yHeadRot) {
+        // No head turning
+    }
+
+    @Override
+    public boolean isPushable() {
+        return false;
+    }
+
+    @Override
     protected void dropFromLootTable(DamageSource damageSource, boolean hitByPlayer) {
         // Do nothing (No loot table drops)
     }
@@ -128,6 +140,21 @@ public class PlayerDummyEntity extends PathfinderMob {
         // Re-enforce drop chances on load, just in case
         for (EquipmentSlot slot : EquipmentSlot.values()) {
             this.setDropChance(slot, 0.0F);
+        }
+    }
+
+    // Prevent the LookControl from resetting xRot on tick
+    private static class DisabledLookControl extends LookControl {
+        public DisabledLookControl(Mob mob) {
+            super(mob);
+        }
+
+        @Override
+        public void tick() {}
+
+        @Override
+        protected boolean resetXRotOnTick() {
+            return false;
         }
     }
 }

@@ -403,7 +403,7 @@ public class PuppetManager {
 
             if (dummyEntity instanceof PlayerDummyEntity dummy) {
                 player.teleportTo(dummyLevel, dummyEntity.getX(), dummyEntity.getY(), dummyEntity.getZ(),
-                        dummyEntity.getYHeadRot(), dummyEntity.getXRot());
+                        dummyEntity.getYRot(), dummyEntity.getXRot());
 
                 dummy.discard();
             }
