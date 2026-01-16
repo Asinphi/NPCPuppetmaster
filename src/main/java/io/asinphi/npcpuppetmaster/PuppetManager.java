@@ -391,6 +391,7 @@ public class PuppetManager {
                 if (npc instanceof Mob mob)
                     mob.setNoAi(session.wasNoAi());
 
+                setChunkLoaded(npcLevel, npc.position(), player.getUUID(), false);
                 // Teleport NPC to Player's CURRENT location
                 npc.teleportTo(player.serverLevel(), player.getX(), player.getY(), player.getZ(), Set.of(),
                         player.getYRot(), player.getXRot());
@@ -406,6 +407,7 @@ public class PuppetManager {
                         dummyEntity.getYRot(), dummyEntity.getXRot());
 
                 dummy.discard();
+                setChunkLoaded(dummyLevel, player.position(), player.getUUID(), false);
             }
         }
 
