@@ -300,13 +300,14 @@ public class PuppetManager {
     }
 
     public static void startPossession(ServerPlayer player, LivingEntity npc) {
-        if (activePossessions.containsKey(player.getUUID())) {
-            cancelPossession(player, false);
-        }
-
         // NPC must have an avatar override
         if (!EntityAvatarManager.hasAvatarOverride(npc)) {
             Lang.send(player, "possess.no_avatar_override");
+            return;
+        }
+
+        if (isPossessing(player)) {
+            switchPossession(player, npc);
             return;
         }
 
@@ -369,6 +370,78 @@ public class PuppetManager {
         Lang.send(player, "possess.success", Placeholder.parsed("target", npc.getName().getString()));
     }
 
+    public static void switchPossession(ServerPlayer player, LivingEntity npc) {
+        ServerLevel level = (ServerLevel) player.level();
+
+        boolean originalInvisible = npc.isInvisible();
+        boolean originalInvulnerable = npc.isInvulnerable();
+        boolean originalNoAi = false;
+        if (npc instanceof Mob mob)
+            originalNoAi = mob.isNoAi();
+
+        // Cancel previous session
+        PossessionSession session = activePossessions.remove(player.getUUID());
+
+        ServerLevel npcLevel = player.getServer().getLevel(session.npcDimension());
+
+        // Restore NPC
+        Entity entity;
+        if (npcLevel != null) {
+            entity = npcLevel.getEntity(session.npcUuid());
+            if (entity instanceof LivingEntity oldNpc) {
+                oldNpc.setYHeadRot(player.getYHeadRot());
+                oldNpc.setYBodyRot(player.yBodyRot);
+                oldNpc.yHeadRotO = player.getYHeadRot(); // Prevent interpolation glitch
+
+                // Restore Flags
+                oldNpc.setInvisible(session.wasInvisible());
+                oldNpc.setInvulnerable(session.wasInvulnerable());
+                if (oldNpc instanceof Mob mob)
+                    mob.setNoAi(session.wasNoAi());
+
+                setChunkLoaded(npcLevel, oldNpc.position(), player.getUUID(), false);
+                // Teleport NPC to Player's CURRENT location
+                oldNpc.teleportTo(player.serverLevel(), player.getX(), player.getY(), player.getZ(), Set.of(),
+                        player.getYRot(), player.getXRot());
+            }
+        }
+
+        // Copy NPC -> Player (so player looks like NPC)
+        EntityAvatarManager.copyTo(npc, List.of(player));
+
+        // Teleport Player to NPC
+        player.teleportTo(level, npc.getX(), npc.getY(), npc.getZ(), npc.getYHeadRot(), npc.getXRot());
+
+        // Hide/Store the NPC
+        // We move it to the void and disable it, rather than deleting it, to preserve its internal state/UUID.
+        npc.setInvisible(true);
+        npc.setInvulnerable(true);
+        npc.teleportTo(level, npc.getX(), level.getMaxBuildHeight() + 100, npc.getZ(), Set.of(), npc.getYRot(),
+                npc.getXRot());
+        if (npc instanceof Mob mob) {
+            mob.setPersistenceRequired();
+            mob.setNoAi(true);
+        }
+
+        setChunkLoaded(level, npc.position(), player.getUUID(), true);
+
+        // Record Session
+        activePossessions.put(player.getUUID(), new PossessionSession(
+                session.dummyUuid(),
+                session.dummyDimension(), // Dummy Dim
+                npc.getUUID(),
+                level.dimension(), // NPC Dim (Initially same as player)
+                originalInvisible,
+                originalInvulnerable,
+                originalNoAi,
+                session.originalHealth()
+        ));
+
+        player.setHealth(player.getMaxHealth());
+
+        Lang.send(player, "possess.success", Placeholder.parsed("target", npc.getName().getString()));
+    }
+
     public static void cancelPossession(ServerPlayer player, boolean wasForced) {
         PossessionSession session = activePossessions.remove(player.getUUID());
         if (session == null) return;
@@ -405,7 +478,6 @@ public class PuppetManager {
             if (dummyEntity instanceof PlayerDummyEntity dummy) {
                 player.teleportTo(dummyLevel, dummyEntity.getX(), dummyEntity.getY(), dummyEntity.getZ(),
                         dummyEntity.getYRot(), dummyEntity.getXRot());
-
                 dummy.discard();
                 setChunkLoaded(dummyLevel, player.position(), player.getUUID(), false);
             }
