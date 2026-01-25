@@ -1,5 +1,6 @@
 package io.asinphi.npcpuppetmaster;
 
+import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.suggestion.SuggestionProvider;
 import de.markusbordihn.easynpc.data.objective.ObjectiveDataEntry;
 import de.markusbordihn.easynpc.data.objective.ObjectiveType;
@@ -409,6 +410,8 @@ public class PuppetManager {
         player.setHealth(player.getMaxHealth());
 
         Lang.send(player, "possess.success", Placeholder.parsed("target", npc.getName().getString()));
+
+        dispatchCommands(Config.getPossessionCommands(), player, npc);
     }
 
     public static void switchPossession(ServerPlayer player, LivingEntity npc) {
@@ -507,6 +510,8 @@ public class PuppetManager {
         player.setHealth(player.getMaxHealth());
 
         Lang.send(player, "possess.success", Placeholder.parsed("target", npc.getName().getString()));
+
+        dispatchCommands(Config.getPossessionCommands(), player, npc);
     }
 
     public static void cancelPossession(ServerPlayer player, boolean wasForced) {
@@ -576,6 +581,8 @@ public class PuppetManager {
             Lang.send(player, "possess.forced_end", Placeholder.parsed("target",
                     entity != null ? entity.getName().getString() : "the NPC"));
         }
+
+        dispatchCommands(Config.getUnpossessionCommands(), player, entity);
     }
 
     /**
@@ -661,6 +668,24 @@ public class PuppetManager {
             level.getChunkSource().addRegionTicket(POSSESSION_TICKET, chunkPos, 2, lockId);
         } else {
             level.getChunkSource().removeRegionTicket(POSSESSION_TICKET, chunkPos, 2, lockId);
+        }
+    }
+
+    private static void dispatchCommands(List<String> commands, ServerPlayer player, Entity npc) {
+        for (String command : commands) {
+            try {
+                command = command.replace("{player-uuid}", player.getStringUUID())
+                        .replace("{player}", player.getName().getString());
+                if (npc != null)
+                    command = command.replace("{npc-uuid}", npc.getStringUUID())
+                            .replace("{npc}", npc.getName().getString());
+                player.server.getCommands().getDispatcher().execute(
+                        command,
+                        player.server.createCommandSourceStack()
+                );
+            } catch (CommandSyntaxException e) {
+                NPCPuppetmaster.LOGGER.error("Error executing command: {}", command, e);
+            }
         }
     }
 }

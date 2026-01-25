@@ -8,6 +8,8 @@ import java.io.Reader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 public final class Config {
@@ -21,11 +23,21 @@ public final class Config {
     private static volatile Map<?, ?> yamlRoot = Map.of();
 
     private static boolean areNpcsPuppetsByDefault;
+    private static List<String> possessionCommands;
+    private static List<String> unpossessionCommands;
     private static boolean isDebugEnabled;
     private static int configVersion;
 
     public static boolean areNpcsPuppetsByDefault () {
         return areNpcsPuppetsByDefault;
+    }
+
+    public static List<String> getPossessionCommands() {
+        return possessionCommands;
+    }
+
+    public static List<String> getUnpossessionCommands() {
+        return unpossessionCommands;
     }
 
     public static boolean isDebugEnabled() {
@@ -40,6 +52,8 @@ public final class Config {
         Map<?, ?> map = yamlRoot;
 
         areNpcsPuppetsByDefault = Boolean.parseBoolean(map.get("npcs_are_puppets_by_default").toString());
+        possessionCommands = requireStringList(map, "possession_commands");
+        unpossessionCommands = requireStringList(map, "unpossession_commands");
         isDebugEnabled = Boolean.parseBoolean(map.get("enable_debug").toString());
         configVersion = requireInt(map, "config_version");
     }
@@ -85,6 +99,24 @@ public final class Config {
             }
         }
         throw new IllegalStateException("Config key '" + key + "' must be an integer (got " + v + ")");
+    }
+
+    private static List<String> requireStringList(Map<?, ?> map, String key) {
+        Object v = map.get(key);
+        if (v == null) {
+            throw new IllegalStateException("Missing required config key: " + key);
+        }
+        List<String> result = new ArrayList<>();
+        if (v instanceof List<?> list) {
+            for (Object item : list) {
+                if (!(item instanceof String)) {
+                    throw new IllegalStateException("Config key '" + key + "' must be a list of strings (got non-string item: " + item + ")");
+                }
+                result.add((String) item);
+            }
+            return result;
+        }
+        throw new IllegalStateException("Config key '" + key + "' must be a list of strings (got " + v + ")");
     }
 
     private static void ensureDefaults() {
