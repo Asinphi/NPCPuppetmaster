@@ -54,7 +54,7 @@ public class PlayerDummyEntity extends PathfinderMob {
 
     public void setOwner(ServerPlayer player) {
         this.entityData.set(OWNER_UUID, Optional.of(player.getUUID()));
-        this.setCustomName(player.getName());
+        this.setCustomName(player.getDisplayName());
         this.setCustomNameVisible(true);
 
         // Copy Equipment (Visual only)
