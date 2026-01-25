@@ -19,6 +19,7 @@ import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
+import net.fabricmc.loader.api.FabricLoader;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.SharedSuggestionProvider;
@@ -37,6 +38,9 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.EntityHitResult;
 import net.minecraft.world.phys.Vec3;
+import virtuoel.pehkui.api.ScaleData;
+import virtuoel.pehkui.api.ScaleType;
+import virtuoel.pehkui.api.ScaleTypes;
 
 import java.lang.reflect.Field;
 import java.util.*;
@@ -53,14 +57,21 @@ public class PuppetManager {
             boolean wasInvisible,
             boolean wasInvulnerable,
             boolean wasNoAi,
-            float originalHealth // of the player
-    ) {}
+            float originalHealth, // of the player
+            List<Float> originalPehkuiScales) {}
 
     private static final int MAX_HISTORY = 5;
     private static final double REACH_DISTANCE = 10.0; // How far away to detect NPCs
     private static final float FOLLOW_STOP_DISTANCE = 2.7f; // Distance to stop when following
-    public static final TicketType<UUID> POSSESSION_TICKET = TicketType
+    private static final TicketType<UUID> POSSESSION_TICKET = TicketType
             .create("possession", Comparator.comparing(UUID::toString));
+    private static final List<ScaleType> SYNCED_PEHKUI_SCALES = List.of(
+            ScaleTypes.MODEL_WIDTH,
+            ScaleTypes.MODEL_HEIGHT,
+            ScaleTypes.HITBOX_WIDTH,
+            ScaleTypes.HITBOX_HEIGHT,
+            ScaleTypes.EYE_HEIGHT);
+
     private static final Map<Action, String> actionPermissions = Map.of(
             Action.DELETE, "delete",
             Action.MOVE_HERE, "move",
@@ -311,6 +322,8 @@ public class PuppetManager {
             return;
         }
 
+        boolean isPehkuiLoaded = FabricLoader.getInstance().isModLoaded("pehkui");
+
         ServerLevel level = (ServerLevel) player.level();
 
         boolean originalInvisible = npc.isInvisible();
@@ -333,8 +346,46 @@ public class PuppetManager {
         // Copy Player -> Dummy (so dummy looks like player)
         EntityAvatarManager.copyTo(player, List.of(dummy));
 
+        // Copy Pehkui scales from player to dummy
+        if (isPehkuiLoaded) {
+            float widthScale = ScaleTypes.MODEL_HEIGHT.getScaleData(player).getScale();
+            float heightScale = ScaleTypes.MODEL_WIDTH.getScaleData(player).getScale();
+            ScaleTypes.MODEL_HEIGHT.getScaleData(dummy).setScale(widthScale);
+            ScaleTypes.MODEL_WIDTH.getScaleData(dummy).setScale(heightScale);
+        }
+
         // Copy NPC -> Player (so player looks like NPC)
         EntityAvatarManager.copyTo(npc, List.of(player));
+
+        // Adjust player scales to match NPC if Pehkui is loaded
+        List<Float> originalPehkuiScales = new ArrayList<>();
+        if (isPehkuiLoaded) {
+            SYNCED_PEHKUI_SCALES.forEach(scaleType -> {
+                float originalScale = scaleType.getScaleData(player).getBaseScale();
+                originalPehkuiScales.add(originalScale);
+            });
+
+            List<Float> targetPehkuiScales = new ArrayList<>();
+
+            float playerHeightScale = ScaleTypes.MODEL_HEIGHT.getScaleData(player).getScale();
+            float playerBbHeightScale = ScaleTypes.HITBOX_HEIGHT.getScaleData(player).getScale();
+            float npcHeightScale = ScaleTypes.MODEL_HEIGHT.getScaleData(npc).getScale();
+            float npcBbHeightScale = ScaleTypes.HITBOX_HEIGHT.getScaleData(npc).getScale();
+            float modelScale = (npc.getBbHeight() * (npcHeightScale / npcBbHeightScale)) /
+                    (player.getBbHeight() * (playerHeightScale / playerBbHeightScale));
+            targetPehkuiScales.add(modelScale); // MODEL_WIDTH
+            targetPehkuiScales.add(modelScale); // MODEL_HEIGHT
+            targetPehkuiScales.add(npc.getBbWidth() / player.getBbWidth()); // HITBOX_WIDTH
+            targetPehkuiScales.add(npc.getBbHeight() / player.getBbHeight()); // HITBOX_HEIGHT
+            targetPehkuiScales.add(npc.getEyeHeight() / player.getEyeHeight()); // EYE_HEIGHT
+
+            for (int i = 0; i < SYNCED_PEHKUI_SCALES.size(); i++) {
+                ScaleType scaleType = SYNCED_PEHKUI_SCALES.get(i);
+                float targetScale = targetPehkuiScales.get(i);
+                ScaleData data = scaleType.getScaleData(player);
+                data.setScale(data.getBaseScale() * targetScale);
+            }
+        }
 
         // Teleport Player to NPC
         player.teleportTo(level, npc.getX(), npc.getY(), npc.getZ(), npc.getYHeadRot(), npc.getXRot());
@@ -362,7 +413,8 @@ public class PuppetManager {
                 originalInvisible,
                 originalInvulnerable,
                 originalNoAi,
-                player.getHealth()
+                player.getHealth(),
+                originalPehkuiScales
         ));
 
         player.setHealth(player.getMaxHealth());
@@ -371,6 +423,8 @@ public class PuppetManager {
     }
 
     public static void switchPossession(ServerPlayer player, LivingEntity npc) {
+        boolean isPehkuiLoaded = FabricLoader.getInstance().isModLoaded("pehkui");
+
         ServerLevel level = (ServerLevel) player.level();
 
         boolean originalInvisible = npc.isInvisible();
@@ -409,6 +463,30 @@ public class PuppetManager {
         // Copy NPC -> Player (so player looks like NPC)
         EntityAvatarManager.copyTo(npc, List.of(player));
 
+        // Adjust player scales to match NPC if Pehkui is loaded
+        if (isPehkuiLoaded) {
+            List<Float> targetPehkuiScales = new ArrayList<>();
+
+            float playerHeightScale = ScaleTypes.MODEL_HEIGHT.getScaleData(player).getScale();
+            float playerBbHeightScale = ScaleTypes.HITBOX_HEIGHT.getScaleData(player).getScale();
+            float npcHeightScale = ScaleTypes.MODEL_HEIGHT.getScaleData(npc).getScale();
+            float npcBbHeightScale = ScaleTypes.HITBOX_HEIGHT.getScaleData(npc).getScale();
+            float modelScale = (npc.getBbHeight() * (npcHeightScale / npcBbHeightScale)) /
+                    (player.getBbHeight() * (playerHeightScale / playerBbHeightScale));
+            targetPehkuiScales.add(modelScale); // MODEL_WIDTH
+            targetPehkuiScales.add(modelScale); // MODEL_HEIGHT
+            targetPehkuiScales.add(npc.getBbWidth() / player.getBbWidth()); // HITBOX_WIDTH
+            targetPehkuiScales.add(npc.getBbHeight() / player.getBbHeight()); // HITBOX_HEIGHT
+            targetPehkuiScales.add(npc.getEyeHeight() / player.getEyeHeight()); // EYE_HEIGHT
+
+            for (int i = 0; i < SYNCED_PEHKUI_SCALES.size(); i++) {
+                ScaleType scaleType = SYNCED_PEHKUI_SCALES.get(i);
+                float targetScale = targetPehkuiScales.get(i);
+                ScaleData data = scaleType.getScaleData(player);
+                data.setScale(data.getBaseScale() * targetScale);
+            }
+        }
+
         // Teleport Player to NPC
         player.teleportTo(level, npc.getX(), npc.getY(), npc.getZ(), npc.getYHeadRot(), npc.getXRot());
 
@@ -434,8 +512,8 @@ public class PuppetManager {
                 originalInvisible,
                 originalInvulnerable,
                 originalNoAi,
-                session.originalHealth()
-        ));
+                session.originalHealth(),
+                session.originalPehkuiScales));
 
         player.setHealth(player.getMaxHealth());
 
@@ -445,6 +523,8 @@ public class PuppetManager {
     public static void cancelPossession(ServerPlayer player, boolean wasForced) {
         PossessionSession session = activePossessions.remove(player.getUUID());
         if (session == null) return;
+
+        boolean isPehkuiLoaded = FabricLoader.getInstance().isModLoaded("pehkui");
 
         ServerLevel dummyLevel = player.getServer().getLevel(session.dummyDimension());
         ServerLevel npcLevel = player.getServer().getLevel(session.npcDimension());
@@ -487,6 +567,17 @@ public class PuppetManager {
         EntityAvatarManager.clearAvatarFromEntity(player);
 
         player.setHealth(session.originalHealth());
+
+        // Restore Pehkui scales
+        if (isPehkuiLoaded) {
+            List<Float> originalPehkuiScales = session.originalPehkuiScales();
+            for (int i = 0; i < SYNCED_PEHKUI_SCALES.size(); i++) {
+                ScaleType scaleType = SYNCED_PEHKUI_SCALES.get(i);
+                float originalScale = originalPehkuiScales.get(i);
+                ScaleData data = scaleType.getScaleData(player);
+                data.setScale(originalScale);
+            }
+        }
 
         if (!wasForced) {
             Lang.send(player, "possess.end", Placeholder.parsed("target",

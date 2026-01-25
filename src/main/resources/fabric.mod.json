@@ -41,6 +41,6 @@
         "npc-avatar": "*"
 	},
 	"suggests": {
-		"another-mod": "*"
+		"pehkui": ">=3.8.3"
 	}
 }

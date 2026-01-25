@@ -27,7 +27,13 @@ repositories {
 		mavenContent { snapshotsOnly() }
 	}
 
-    maven { url = "https://pkgs.dev.azure.com/djtheredstoner/DevAuth/_packaging/public/maven/v1" }
+    maven {
+		url = "https://pkgs.dev.azure.com/djtheredstoner/DevAuth/_packaging/public/maven/v1"
+	}
+
+	maven {
+		url = "https://jitpack.io"
+	}
 
 	maven {
 		name = "CottonMC"
@@ -90,6 +96,10 @@ dependencies {
 	modImplementation include("io.github.cottonmc:LibGui:11.1.0+1.21")
 
 	modImplementation "maven.modrinth:easy-npc-core:6.2.0-fabric,1.21.1"
+
+	modApi("com.github.Virtuoel:Pehkui:3.8.3", {
+		exclude group: 'net.fabricmc.fabric-api'
+	})
 
     modImplementation "io.asinphi:npc-avatar:1.0.0"
 }
