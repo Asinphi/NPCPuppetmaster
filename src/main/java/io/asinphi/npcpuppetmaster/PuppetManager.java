@@ -29,9 +29,7 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.level.TicketType;
-import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.*;
 import net.minecraft.world.entity.projectile.ProjectileUtil;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
@@ -39,7 +37,7 @@ import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.EntityHitResult;
 import net.minecraft.world.phys.Vec3;
 import virtuoel.pehkui.api.ScaleData;
-import virtuoel.pehkui.api.ScaleType;
+import virtuoel.pehkui.api.ScaleRegistries;
 import virtuoel.pehkui.api.ScaleTypes;
 
 import java.lang.reflect.Field;
@@ -65,12 +63,6 @@ public class PuppetManager {
     private static final float FOLLOW_STOP_DISTANCE = 2.7f; // Distance to stop when following
     private static final TicketType<UUID> POSSESSION_TICKET = TicketType
             .create("possession", Comparator.comparing(UUID::toString));
-    private static final List<ScaleType> SYNCED_PEHKUI_SCALES = List.of(
-            ScaleTypes.MODEL_WIDTH,
-            ScaleTypes.MODEL_HEIGHT,
-            ScaleTypes.HITBOX_WIDTH,
-            ScaleTypes.HITBOX_HEIGHT,
-            ScaleTypes.EYE_HEIGHT);
 
     private static final Map<Action, String> actionPermissions = Map.of(
             Action.DELETE, "delete",
@@ -360,31 +352,28 @@ public class PuppetManager {
         // Adjust player scales to match NPC if Pehkui is loaded
         List<Float> originalPehkuiScales = new ArrayList<>();
         if (isPehkuiLoaded) {
-            SYNCED_PEHKUI_SCALES.forEach(scaleType -> {
-                float originalScale = scaleType.getScaleData(player).getBaseScale();
-                originalPehkuiScales.add(originalScale);
-            });
-
-            List<Float> targetPehkuiScales = new ArrayList<>();
-
-            float playerHeightScale = ScaleTypes.MODEL_HEIGHT.getScaleData(player).getScale();
-            float playerBbHeightScale = ScaleTypes.HITBOX_HEIGHT.getScaleData(player).getScale();
-            float npcHeightScale = ScaleTypes.MODEL_HEIGHT.getScaleData(npc).getScale();
-            float npcBbHeightScale = ScaleTypes.HITBOX_HEIGHT.getScaleData(npc).getScale();
-            float modelScale = (npc.getBbHeight() * (npcHeightScale / npcBbHeightScale)) /
-                    (player.getBbHeight() * (playerHeightScale / playerBbHeightScale));
-            targetPehkuiScales.add(modelScale); // MODEL_WIDTH
-            targetPehkuiScales.add(modelScale); // MODEL_HEIGHT
-            targetPehkuiScales.add(npc.getBbWidth() / player.getBbWidth()); // HITBOX_WIDTH
-            targetPehkuiScales.add(npc.getBbHeight() / player.getBbHeight()); // HITBOX_HEIGHT
-            targetPehkuiScales.add(npc.getEyeHeight() / player.getEyeHeight()); // EYE_HEIGHT
-
-            for (int i = 0; i < SYNCED_PEHKUI_SCALES.size(); i++) {
-                ScaleType scaleType = SYNCED_PEHKUI_SCALES.get(i);
-                float targetScale = targetPehkuiScales.get(i);
+            ScaleRegistries.SCALE_TYPES.forEach((id,scaleType) -> {
                 ScaleData data = scaleType.getScaleData(player);
-                data.setScale(data.getBaseScale() * targetScale);
-            }
+                float originalScale = data.getBaseScale();
+                originalPehkuiScales.add(originalScale);
+                data.setScale(scaleType.getScaleData(npc).getBaseScale());
+            });
+            // Account for differences in original model/hitbox sizes
+            EntityDimensions npcDimensions = npc.getDimensions(Pose.STANDING);
+            EntityDimensions playerDimensions = player.getDimensions(Pose.STANDING);
+            float modelScale = npcDimensions.height() / playerDimensions.height();
+            ScaleData modelHeightData = ScaleTypes.MODEL_HEIGHT.getScaleData(player);
+            modelHeightData.setScale(modelHeightData.getBaseScale() * modelScale);
+            ScaleData modelWidthData = ScaleTypes.MODEL_WIDTH.getScaleData(player);
+            modelWidthData.setScale(modelWidthData.getBaseScale() * modelScale);
+            ScaleData hitboxHeightData = ScaleTypes.HITBOX_HEIGHT.getScaleData(player);
+            hitboxHeightData.setScale(hitboxHeightData.getBaseScale() * modelScale);
+            ScaleData hitboxWidthData = ScaleTypes.HITBOX_WIDTH.getScaleData(player);
+            hitboxWidthData.setScale(hitboxWidthData.getBaseScale() *
+                    (npcDimensions.width() / playerDimensions.width()));
+            ScaleData eyeHeightData = ScaleTypes.EYE_HEIGHT.getScaleData(player);
+            eyeHeightData.setScale(eyeHeightData.getBaseScale() *
+                    (npc.getEyeHeight() / player.getEyeHeight()));
         }
 
         // Teleport Player to NPC
@@ -465,26 +454,26 @@ public class PuppetManager {
 
         // Adjust player scales to match NPC if Pehkui is loaded
         if (isPehkuiLoaded) {
-            List<Float> targetPehkuiScales = new ArrayList<>();
-
-            float playerHeightScale = ScaleTypes.MODEL_HEIGHT.getScaleData(player).getScale();
-            float playerBbHeightScale = ScaleTypes.HITBOX_HEIGHT.getScaleData(player).getScale();
-            float npcHeightScale = ScaleTypes.MODEL_HEIGHT.getScaleData(npc).getScale();
-            float npcBbHeightScale = ScaleTypes.HITBOX_HEIGHT.getScaleData(npc).getScale();
-            float modelScale = (npc.getBbHeight() * (npcHeightScale / npcBbHeightScale)) /
-                    (player.getBbHeight() * (playerHeightScale / playerBbHeightScale));
-            targetPehkuiScales.add(modelScale); // MODEL_WIDTH
-            targetPehkuiScales.add(modelScale); // MODEL_HEIGHT
-            targetPehkuiScales.add(npc.getBbWidth() / player.getBbWidth()); // HITBOX_WIDTH
-            targetPehkuiScales.add(npc.getBbHeight() / player.getBbHeight()); // HITBOX_HEIGHT
-            targetPehkuiScales.add(npc.getEyeHeight() / player.getEyeHeight()); // EYE_HEIGHT
-
-            for (int i = 0; i < SYNCED_PEHKUI_SCALES.size(); i++) {
-                ScaleType scaleType = SYNCED_PEHKUI_SCALES.get(i);
-                float targetScale = targetPehkuiScales.get(i);
+            ScaleRegistries.SCALE_TYPES.forEach((id,scaleType) -> {
                 ScaleData data = scaleType.getScaleData(player);
-                data.setScale(data.getBaseScale() * targetScale);
-            }
+                data.setScale(scaleType.getScaleData(npc).getBaseScale());
+            });
+            // Account for differences in original model/hitbox sizes
+            EntityDimensions npcDimensions = npc.getDimensions(Pose.STANDING);
+            EntityDimensions playerDimensions = player.getDimensions(Pose.STANDING);
+            float modelScale = npcDimensions.height() / playerDimensions.height();
+            ScaleData modelHeightData = ScaleTypes.MODEL_HEIGHT.getScaleData(player);
+            modelHeightData.setScale(modelHeightData.getBaseScale() * modelScale);
+            ScaleData modelWidthData = ScaleTypes.MODEL_WIDTH.getScaleData(player);
+            modelWidthData.setScale(modelWidthData.getBaseScale() * modelScale);
+            ScaleData hitboxHeightData = ScaleTypes.HITBOX_HEIGHT.getScaleData(player);
+            hitboxHeightData.setScale(hitboxHeightData.getBaseScale() * modelScale);
+            ScaleData hitboxWidthData = ScaleTypes.HITBOX_WIDTH.getScaleData(player);
+            hitboxWidthData.setScale(hitboxWidthData.getBaseScale() *
+                    (npcDimensions.width() / playerDimensions.width()));
+            ScaleData eyeHeightData = ScaleTypes.EYE_HEIGHT.getScaleData(player);
+            eyeHeightData.setScale(eyeHeightData.getBaseScale() *
+                    (npc.getEyeHeight() / player.getEyeHeight()));
         }
 
         // Teleport Player to NPC
@@ -571,12 +560,13 @@ public class PuppetManager {
         // Restore Pehkui scales
         if (isPehkuiLoaded) {
             List<Float> originalPehkuiScales = session.originalPehkuiScales();
-            for (int i = 0; i < SYNCED_PEHKUI_SCALES.size(); i++) {
-                ScaleType scaleType = SYNCED_PEHKUI_SCALES.get(i);
-                float originalScale = originalPehkuiScales.get(i);
+            int[] i = {0};
+            ScaleRegistries.SCALE_TYPES.forEach((id,scaleType) -> {
+                float originalScale = originalPehkuiScales.get(i[0]);
                 ScaleData data = scaleType.getScaleData(player);
                 data.setScale(originalScale);
-            }
+                i[0]++;
+            });
         }
 
         if (!wasForced) {
