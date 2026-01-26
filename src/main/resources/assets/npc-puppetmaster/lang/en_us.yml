@@ -40,12 +40,12 @@ global_placeholders:
   prefix: "<gray>[<gradient:#9339bd:#4e46c2>NPC Puppetmaster</gradient>]</gray> "
 
   prefixes:
-    info: "<dark_gray><bold>[</bold><blue><bold>i</bold></blue><dark_gray><bold>]</bold></dark_gray> <gray>"
-    success: "<dark_gray><bold>[</bold><dark_green><bold>✔</bold></dark_green><dark_gray><bold>]</bold></dark_gray> <gray>"
-    warn: "<dark_gray><bold>[</bold><gold><bold>!</bold></gold><dark_gray><bold>]</bold></dark_gray> <gold>"
-    error: "<dark_gray><bold>[</bold><dark_red><bold>X</bold></dark_red><dark_gray><bold>]</bold></dark_gray> <red>"
-    question: "<dark_gray><bold>[</bold><green><bold>?</bold></green><dark_gray><bold>]</bold></dark_gray> <gray>"
-    announce: "<dark_gray><bold>[</bold><dark_purple><bold>!</bold></dark_purple><dark_gray><bold>]</bold></dark_gray> <light_purple>"
+    info: "<dark_gray>[<blue><bold>i</bold></blue><dark_gray>]</dark_gray> <gray>"
+    success: "<dark_gray>[<dark_green><bold>✔</bold></dark_green><dark_gray>]</dark_gray> <gray>"
+    warn: "<dark_gray>[<gold><bold>!</bold></gold><dark_gray>]</dark_gray> <gold>"
+    error: "<dark_gray>[<dark_red><bold>X</bold></dark_red><dark_gray>]</dark_gray> <red>"
+    question: "<dark_gray>[<green><bold>?</bold></green><dark_gray>]</dark_gray> <gray>"
+    announce: "<dark_gray>[<dark_purple><bold>!</bold></dark_purple><dark_gray>]</dark_gray> <light_purple>"
 
   symbols:
     right_arrow: "→"
