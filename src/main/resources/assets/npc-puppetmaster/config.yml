@@ -5,6 +5,7 @@ npcs_are_puppets_by_default: true
 # List of commands that will be executed by console when a player possesses an NPC puppet
 possession_commands:
   - "character temp name {npc} {player}"
+  - "character temp desc Currently controlling an NPC. {player}"
 
 unpossession_commands:
   - "character temp clear {player}"
