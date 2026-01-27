@@ -27,6 +27,7 @@ import net.minecraft.commands.SharedSuggestionProvider;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceKey;
+import net.minecraft.server.TickTask;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.level.TicketType;
@@ -100,7 +101,15 @@ public class PuppetManager {
         ServerLivingEntityEvents.ALLOW_DEATH.register((entity, damageSource,
                                                        damageAmount) -> {
             if (entity instanceof ServerPlayer player && isPossessing(player)) {
-                cancelPossession(player, true); // true = forced
+                player.setHealth(1.0f);
+                // Schedule possession cancellation so player gets properly teleported back to dummy
+                Objects.requireNonNull(player.getServer())
+                        .tell(new TickTask(player.getServer().getTickCount() + 1, () -> {
+                    // Verify they are still possessing (in case of weird race conditions)
+                    if (PuppetManager.isPossessing(player)) {
+                        PuppetManager.cancelPossession(player, true); // true = forced
+                    }
+                }));
                 return false;
             }
             return true; // Allow death for everyone else
