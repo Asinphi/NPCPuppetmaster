@@ -9,6 +9,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -23,6 +24,9 @@ public final class Config {
     private static volatile Map<?, ?> yamlRoot = Map.of();
 
     private static boolean areNpcsPuppetsByDefault;
+    private static Map<String, String> puppetPresets;
+    private static int createPuppetMaxCount;
+    private static long createPuppetWindowMillis;
     private static List<String> possessionCommands;
     private static List<String> unpossessionCommands;
     private static boolean isDebugEnabled;
@@ -30,6 +34,18 @@ public final class Config {
 
     public static boolean areNpcsPuppetsByDefault () {
         return areNpcsPuppetsByDefault;
+    }
+
+    public static Map<String, String> getPuppetPresets() {
+        return puppetPresets;
+    }
+
+    public static int getCreatePuppetMaxCount() {
+        return createPuppetMaxCount;
+    }
+
+    public static long getCreatePuppetWindowMillis() {
+        return createPuppetWindowMillis;
     }
 
     public static List<String> getPossessionCommands() {
@@ -52,6 +68,10 @@ public final class Config {
         Map<?, ?> map = yamlRoot;
 
         areNpcsPuppetsByDefault = Boolean.parseBoolean(map.get("npcs_are_puppets_by_default").toString());
+        puppetPresets = requireMap(map, "puppet_presets", String.class, String.class);
+        createPuppetMaxCount = requireInt((Map<?, ?>) map.get("create_puppet_rate_limit"), "max_puppets");
+        createPuppetWindowMillis = requireInt((Map<?, ?>) map.get("create_puppet_rate_limit"),
+                "interval_seconds") * 1000L;
         possessionCommands = requireStringList(map, "possession_commands");
         unpossessionCommands = requireStringList(map, "unpossession_commands");
         isDebugEnabled = Boolean.parseBoolean(map.get("enable_debug").toString());
@@ -99,6 +119,26 @@ public final class Config {
             }
         }
         throw new IllegalStateException("Config key '" + key + "' must be an integer (got " + v + ")");
+    }
+
+    private static <K, V> Map<K, V> requireMap(Map<?, ?> map, String key, Class<K> keyClass, Class<V> valueClass) {
+        Object v = map.get(key);
+        if (v == null) {
+            throw new IllegalStateException("Missing required config key: " + key);
+        }
+        Map<K, V> result = new HashMap<>();
+        if (v instanceof Map<?, ?> rawMap) {
+            for (Map.Entry<?, ?> entry : rawMap.entrySet()) {
+                if (!keyClass.isInstance(entry.getKey()) || !valueClass.isInstance(entry.getValue())) {
+                    throw new IllegalStateException("Config key '" + key + "' must be a map of " +
+                            keyClass.getSimpleName() + " to " + valueClass.getSimpleName() +
+                            " (got invalid entry: " + entry + ")");
+                }
+                result.put(keyClass.cast(entry.getKey()), valueClass.cast(entry.getValue()));
+            }
+            return result;
+        }
+        throw new IllegalStateException("Config key '" + key + "' must be a map (got " + v + ")");
     }
 
     private static List<String> requireStringList(Map<?, ?> map, String key) {

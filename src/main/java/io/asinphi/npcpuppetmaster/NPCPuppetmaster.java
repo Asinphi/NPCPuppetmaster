@@ -3,6 +3,7 @@ package io.asinphi.npcpuppetmaster;
 import io.asinphi.npcpuppetmaster.attachment.ModAttachments;
 import io.asinphi.npcpuppetmaster.command.EditPuppetCommand;
 import io.asinphi.npcpuppetmaster.command.PuppeteerCommand;
+import io.asinphi.npcpuppetmaster.command.SpawnPuppetCommand;
 import io.asinphi.npcpuppetmaster.command.UnpossessCommand;
 import io.asinphi.npcpuppetmaster.config.Config;
 import io.asinphi.npcpuppetmaster.config.Lang;
@@ -38,6 +39,7 @@ public class NPCPuppetmaster implements ModInitializer {
                     PuppeteerCommand.register(dispatcher);
                     EditPuppetCommand.register(dispatcher);
                     UnpossessCommand.register(dispatcher);
+                    SpawnPuppetCommand.register(dispatcher);
                 }
         );
 	}
