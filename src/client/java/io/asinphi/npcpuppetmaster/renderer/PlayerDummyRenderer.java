@@ -85,6 +85,14 @@ public class PlayerDummyRenderer extends LivingEntityRenderer<PlayerDummyEntity,
         super.render(entity, entityYaw, partialTicks, poseStack, buffer, packedLight);
     }
 
+    @Override
+    protected void scale(PlayerDummyEntity entity, com.mojang.blaze3d.vertex.PoseStack poseStack, float partialTick) {
+        // Vanilla players are scaled down to 0.9375 (15/16) to fit the 1.8m hitbox.
+        // Without this, the 2.0m (32 pixel) model looks taller than a standard player.
+        float scale = 0.9375F;
+        poseStack.scale(scale, scale, scale);
+    }
+
     private HumanoidModel.ArmPose getArmPose(PlayerDummyEntity entity, InteractionHand hand) {
         ItemStack itemStack = entity.getItemInHand(hand);
         if (itemStack.isEmpty()) {
