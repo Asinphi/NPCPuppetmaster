@@ -3,9 +3,7 @@ package io.asinphi.npcpuppetmaster.command;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
-import de.markusbordihn.easynpc.entity.LivingEntityManager;
-import de.markusbordihn.easynpc.handler.PresetHandler;
-import io.asinphi.npcpuppetmaster.attachment.ModAttachments;
+import io.asinphi.npcpuppetmaster.PuppetManager;
 import io.asinphi.npcpuppetmaster.config.Config;
 import io.asinphi.npcpuppetmaster.config.Lang;
 import io.asinphi.npcpuppetmaster.util.RateLimiter;
@@ -13,14 +11,12 @@ import me.lucko.fabric.api.permissions.v0.Permissions;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 
-import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 public class SpawnPuppetCommand {
@@ -102,21 +98,10 @@ public class SpawnPuppetCommand {
             }
         }
 
-        // TODO Bump EasyNPC and use its newer importPreset method
-        UUID npcUuid = UUID.randomUUID();
         Vec3 spawnPos = resolveSpawnPosition(player, location);
-        boolean success = PresetHandler.importCustomPreset(player.serverLevel(),
-                ResourceLocation.fromNamespaceAndPath("easy_npc", presetOptions.getPath()),
-                spawnPos,
-                npcUuid,
-                player);
+        LivingEntity entity = PuppetManager.spawnNpc(presetOptions, player.serverLevel(), spawnPos, player);
 
-        if (success) {
-            Entity spawnedEntity = (Entity) LivingEntityManager.getEasyNPCEntityByUUID(npcUuid, player.serverLevel());
-            if (spawnedEntity != null) {
-                spawnedEntity.setAttached(ModAttachments.IS_PUPPET, presetOptions.isPuppet());
-                spawnedEntity.setAttached(ModAttachments.IS_TRANSIENT, presetOptions.isTransient());
-            }
+        if (entity != null) {
             Lang.send(source, "commands.spawnpuppet.success",
                     Placeholder.unparsed("preset", presetName)
             );

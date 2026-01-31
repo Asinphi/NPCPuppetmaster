@@ -4,8 +4,10 @@ import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.suggestion.SuggestionProvider;
 import de.markusbordihn.easynpc.data.objective.ObjectiveDataEntry;
 import de.markusbordihn.easynpc.data.objective.ObjectiveType;
+import de.markusbordihn.easynpc.entity.LivingEntityManager;
 import de.markusbordihn.easynpc.entity.easynpc.EasyNPC;
 import de.markusbordihn.easynpc.entity.easynpc.data.ObjectiveDataCapable;
+import de.markusbordihn.easynpc.handler.PresetHandler;
 import io.asinphi.npcavatar.avatar.EntityAvatarManager;
 import io.asinphi.npcpuppetmaster.action.Action;
 import io.asinphi.npcpuppetmaster.attachment.ModAttachments;
@@ -27,6 +29,7 @@ import net.minecraft.commands.SharedSuggestionProvider;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.TickTask;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -38,6 +41,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.EntityHitResult;
 import net.minecraft.world.phys.Vec3;
+import org.jetbrains.annotations.Nullable;
 import virtuoel.pehkui.api.ScaleData;
 import virtuoel.pehkui.api.ScaleRegistries;
 import virtuoel.pehkui.api.ScaleTypes;
@@ -114,6 +118,30 @@ public class PuppetManager {
             }
             return true; // Allow death for everyone else
         });
+    }
+
+    @SuppressWarnings("UnstableApiUsage")
+    public static LivingEntity spawnNpc(Config.PresetOptions preset, ServerLevel level, Vec3 location,
+                                        @Nullable ServerPlayer player) {
+        UUID npcUuid = UUID.randomUUID();
+        // TODO Bump EasyNPC and use its newer importPreset method
+        boolean success = PresetHandler.importCustomPreset(level,
+                ResourceLocation.fromNamespaceAndPath("easy_npc", preset.getPath()),
+                location,
+                npcUuid,
+                player);
+        if (success) {
+            LivingEntity spawnedEntity = (LivingEntity) LivingEntityManager.getEasyNPCEntityByUUID(
+                    npcUuid, level);
+            if (spawnedEntity != null) {
+                spawnedEntity.setAttached(ModAttachments.IS_PUPPET, preset.isPuppet());
+                spawnedEntity.setAttached(ModAttachments.IS_TRANSIENT, preset.isTransient());
+                if (player != null)
+                    recordSelection(player, spawnedEntity);
+            }
+            return spawnedEntity;
+        }
+        return null;
     }
 
     public static void openGui(ServerPlayer player, LivingEntity target) {
