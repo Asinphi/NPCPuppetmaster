@@ -3,7 +3,7 @@
 	"package": "io.asinphi.npcpuppetmaster.mixin",
 	"compatibilityLevel": "JAVA_21",
 	"mixins": [
-
+		"TransientEntityMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1

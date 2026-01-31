@@ -3,7 +3,9 @@ package io.asinphi.npcpuppetmaster.command;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
+import de.markusbordihn.easynpc.entity.LivingEntityManager;
 import de.markusbordihn.easynpc.handler.PresetHandler;
+import io.asinphi.npcpuppetmaster.attachment.ModAttachments;
 import io.asinphi.npcpuppetmaster.config.Config;
 import io.asinphi.npcpuppetmaster.config.Lang;
 import io.asinphi.npcpuppetmaster.util.RateLimiter;
@@ -13,6 +15,7 @@ import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.phys.Vec3;
 
 import java.util.UUID;
@@ -52,12 +55,14 @@ public class SpawnPuppetCommand {
         );
     }
 
+    @SuppressWarnings("UnstableApiUsage")
     private static int spawnPuppet(CommandContext<CommandSourceStack> ctx) {
         CommandSourceStack source = ctx.getSource();
         ServerPlayer player = source.getPlayer();
         String presetName = StringArgumentType.getString(ctx, "preset");
 
-        if (!Config.getPuppetPresets().containsKey(presetName)) {
+        Config.PresetOptions presetOptions = Config.getPuppetPresets().get(presetName);
+        if (presetOptions == null) {
             Lang.send(source, "commands.spawnpuppet.invalid_preset",
                     Placeholder.unparsed("preset", presetName),
                     Placeholder.parsed("valid_presets", getPresetsMiniMessage())
@@ -81,13 +86,19 @@ public class SpawnPuppetCommand {
         }
 
         // TODO Bump EasyNPC and use its newer importPreset method
+        UUID npcUuid = UUID.randomUUID();
         boolean success = PresetHandler.importCustomPreset(player.serverLevel(),
-                ResourceLocation.fromNamespaceAndPath("easy_npc", Config.getPuppetPresets().get(presetName)),
+                ResourceLocation.fromNamespaceAndPath("easy_npc", presetOptions.getPath()),
                 new Vec3(player.getX(), player.getY(), player.getZ()),
-                UUID.randomUUID(),
+                npcUuid,
                 player);
 
         if (success) {
+            Entity spawnedEntity = (Entity) LivingEntityManager.getEasyNPCEntityByUUID(npcUuid, player.serverLevel());
+            if (spawnedEntity != null) {
+                spawnedEntity.setAttached(ModAttachments.IS_PUPPET, presetOptions.isPuppet());
+                spawnedEntity.setAttached(ModAttachments.IS_TRANSIENT, presetOptions.isTransient());
+            }
             Lang.send(source, "commands.spawnpuppet.success",
                     Placeholder.unparsed("preset", presetName)
             );

@@ -4,6 +4,7 @@ import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.BoolArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
+import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import de.markusbordihn.easynpc.commands.arguments.EasyNPCArgument;
 import io.asinphi.npcpuppetmaster.attachment.ModAttachments;
 import io.asinphi.npcpuppetmaster.config.Lang;
@@ -19,6 +20,10 @@ public class EditPuppetCommand {
         dispatcher.register(Commands.literal("editpuppet")
                 .requires(Permissions.require("npcp.edit", 2))
                 .then(Commands.argument("target", EasyNPCArgument.npc())
+                        .then(Commands.literal("transient")
+                                .then(Commands.argument("enabled", BoolArgumentType.bool()))
+                                        .executes(EditPuppetCommand::setIsTransient)
+                                )
                         .then(Commands.literal("ispuppet")
                                 .then(Commands.argument("enabled", BoolArgumentType.bool())
                                         .executes(EditPuppetCommand::setIsPuppet)
@@ -39,7 +44,22 @@ public class EditPuppetCommand {
     }
 
     @SuppressWarnings("UnstableApiUsage")
-    private static int setIsPuppet(CommandContext<CommandSourceStack> context) throws com.mojang.brigadier.exceptions.CommandSyntaxException {
+    private static int setIsTransient(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
+        Entity target = (Entity) EasyNPCArgument.getEntity(context, "target");
+        boolean enabled = BoolArgumentType.getBool(context, "enabled");
+
+        target.setAttached(ModAttachments.IS_TRANSIENT, enabled);
+
+        Lang.send(context.getSource(), "commands.editpuppet.transient.success",
+                Placeholder.parsed("target", target.getName().getString()),
+                Placeholder.parsed("despawn", enabled ? "<yellow>despawn</green>" : "<green>never despawn</green>")
+        );
+
+        return 1;
+    }
+
+    @SuppressWarnings("UnstableApiUsage")
+    private static int setIsPuppet(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
         Entity target = (Entity) EasyNPCArgument.getEntity(context, "target");
         boolean enabled = BoolArgumentType.getBool(context, "enabled");
 
@@ -54,7 +74,7 @@ public class EditPuppetCommand {
     }
 
     @SuppressWarnings("UnstableApiUsage")
-    private static int clearPermission(CommandContext<CommandSourceStack> context) throws com.mojang.brigadier.exceptions.CommandSyntaxException {
+    private static int clearPermission(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
         Entity target = (Entity) EasyNPCArgument.getEntity(context, "target");
 
         // Remove the attachment to reset it
@@ -67,7 +87,7 @@ public class EditPuppetCommand {
     }
 
     @SuppressWarnings("UnstableApiUsage")
-    private static int setPermission(CommandContext<CommandSourceStack> context) throws com.mojang.brigadier.exceptions.CommandSyntaxException {
+    private static int setPermission(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
         Entity target = (Entity) EasyNPCArgument.getEntity(context, "target");
         String node = StringArgumentType.getString(context, "node");
         // Set the required permission string

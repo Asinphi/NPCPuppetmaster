@@ -24,7 +24,7 @@ public final class Config {
     private static volatile Map<?, ?> yamlRoot = Map.of();
 
     private static boolean areNpcsPuppetsByDefault;
-    private static Map<String, String> puppetPresets;
+    private static Map<String, PresetOptions> puppetPresets;
     private static int createPuppetMaxCount;
     private static long createPuppetWindowMillis;
     private static List<String> possessionCommands;
@@ -36,7 +36,7 @@ public final class Config {
         return areNpcsPuppetsByDefault;
     }
 
-    public static Map<String, String> getPuppetPresets() {
+    public static Map<String, PresetOptions> getPuppetPresets() {
         return puppetPresets;
     }
 
@@ -67,14 +67,15 @@ public final class Config {
     public static void initValues() {
         Map<?, ?> map = yamlRoot;
 
-        areNpcsPuppetsByDefault = Boolean.parseBoolean(map.get("npcs_are_puppets_by_default").toString());
-        puppetPresets = requireMap(map, "puppet_presets", String.class, String.class);
+        areNpcsPuppetsByDefault = requireBoolean(map, "npcs_are_puppets_by_default");
+        PresetOptions defaultPresetOptions = loadDefaultPresetOptions(map);
+        puppetPresets = loadPuppetPresets(map, defaultPresetOptions);
         createPuppetMaxCount = requireInt((Map<?, ?>) map.get("create_puppet_rate_limit"), "max_puppets");
         createPuppetWindowMillis = requireInt((Map<?, ?>) map.get("create_puppet_rate_limit"),
                 "interval_seconds") * 1000L;
         possessionCommands = requireStringList(map, "possession_commands");
         unpossessionCommands = requireStringList(map, "unpossession_commands");
-        isDebugEnabled = Boolean.parseBoolean(map.get("enable_debug").toString());
+        isDebugEnabled = requireBoolean(map, "enable_debug");
         configVersion = requireInt(map, "config_version");
     }
 
@@ -121,6 +122,55 @@ public final class Config {
         throw new IllegalStateException("Config key '" + key + "' must be an integer (got " + v + ")");
     }
 
+    private static boolean requireBoolean(Map<?, ?> map, String key) {
+        Object v = map.get(key);
+        if (v == null) {
+            throw new IllegalStateException("Missing required config key: " + key);
+        }
+        return parseBoolean(key, v);
+    }
+
+    private static Boolean optionalBoolean(Map<?, ?> map, String key) {
+        if (!map.containsKey(key)) {
+            return null;
+        }
+        Object v = map.get(key);
+        if (v == null) {
+            return null;
+        }
+        return parseBoolean(key, v);
+    }
+
+    private static boolean parseBoolean(String key, Object v) {
+        if (v instanceof Boolean b) return b;
+        if (v instanceof String s) {
+            String normalized = s.trim().toLowerCase();
+            if ("true".equals(normalized)) return true;
+            if ("false".equals(normalized)) return false;
+        }
+        throw new IllegalStateException("Config key '" + key + "' must be a boolean (got " + v + ")");
+    }
+
+    private static String requireString(Map<?, ?> map, String key) {
+        Object v = map.get(key);
+        if (v == null) {
+            throw new IllegalStateException("Missing required config key: " + key);
+        }
+        if (v instanceof String s) return s;
+        throw new IllegalStateException("Config key '" + key + "' must be a string (got " + v + ")");
+    }
+
+    private static Map<?, ?> requireMap(Map<?, ?> map, String key) {
+        Object v = map.get(key);
+        if (v == null) {
+            throw new IllegalStateException("Missing required config key: " + key);
+        }
+        if (v instanceof Map<?, ?> rawMap) {
+            return rawMap;
+        }
+        throw new IllegalStateException("Config key '" + key + "' must be a map (got " + v + ")");
+    }
+
     private static <K, V> Map<K, V> requireMap(Map<?, ?> map, String key, Class<K> keyClass, Class<V> valueClass) {
         Object v = map.get(key);
         if (v == null) {
@@ -159,6 +209,44 @@ public final class Config {
         throw new IllegalStateException("Config key '" + key + "' must be a list of strings (got " + v + ")");
     }
 
+    private static PresetOptions loadDefaultPresetOptions(Map<?, ?> map) {
+        Map<?, ?> defaults = requireMap(map, "default_preset_options");
+        return PresetOptions.fromOptions(defaults, null);
+    }
+
+    private static Map<String, PresetOptions> loadPuppetPresets(Map<?, ?> map, PresetOptions defaults) {
+        Map<?, ?> presetRoot = requireMap(map, "puppet_presets");
+        Map<String, PresetOptions> result = new HashMap<>();
+        for (Map.Entry<?, ?> entry : presetRoot.entrySet()) {
+            if (!(entry.getKey() instanceof String presetName)) {
+                throw new IllegalStateException("puppet_presets keys must be strings (got " + entry.getKey() + ")");
+            }
+
+            PresetOptions presetOptions;
+            Object rawPreset = entry.getValue();
+            if (rawPreset instanceof String rawPath) {
+                presetOptions = new PresetOptions(rawPath, null, null);
+            } else if (rawPreset instanceof Map<?, ?> presetMap) {
+                String path = requireString(presetMap, "path");
+                Map<?, ?> optionsMap = presetMap;
+                Object optionsRaw = presetMap.get("options");
+                if (optionsRaw != null) {
+                    if (optionsRaw instanceof Map<?, ?> nestedOptions) {
+                        optionsMap = nestedOptions;
+                    } else {
+                        throw new IllegalStateException("Config key 'options' in preset '" + presetName + "' must be a map (got " + optionsRaw + ")");
+                    }
+                }
+                presetOptions = PresetOptions.fromOptions(optionsMap, path);
+            } else {
+                throw new IllegalStateException("puppet_presets entries must be a string path or map (got " + rawPreset + ")");
+            }
+
+            result.put(presetName, defaults.merge(presetOptions).requireComplete(presetName));
+        }
+        return result;
+    }
+
     private static void ensureDefaults() {
         try {
             Files.createDirectories(CONFIG_PATH.getParent());
@@ -182,4 +270,57 @@ public final class Config {
     }
 
     private Config() {}
+
+    public static final class PresetOptions {
+        private final String path;
+        private final Boolean isPuppet;
+        private final Boolean isTransient;
+
+        public PresetOptions(String path, Boolean isPuppet, Boolean isTransient) {
+            this.path = path;
+            this.isPuppet = isPuppet;
+            this.isTransient = isTransient;
+        }
+
+        public String getPath() {
+            return path;
+        }
+
+        public boolean isPuppet() {
+            return Boolean.TRUE.equals(isPuppet);
+        }
+
+        public boolean isTransient() {
+            return Boolean.TRUE.equals(isTransient);
+        }
+
+        public PresetOptions merge(PresetOptions overrides) {
+            return new PresetOptions(
+                    overrides.path != null ? overrides.path : this.path,
+                    overrides.isPuppet != null ? overrides.isPuppet : this.isPuppet,
+                    overrides.isTransient != null ? overrides.isTransient : this.isTransient
+            );
+        }
+
+        public PresetOptions requireComplete(String presetName) {
+            if (path == null || path.isBlank()) {
+                throw new IllegalStateException("Preset '" + presetName + "' is missing required path.");
+            }
+            if (isPuppet == null) {
+                throw new IllegalStateException("Preset '" + presetName + "' is missing required option: is_puppet");
+            }
+            if (isTransient == null) {
+                throw new IllegalStateException("Preset '" + presetName + "' is missing required option: transient");
+            }
+            return this;
+        }
+
+        private static PresetOptions fromOptions(Map<?, ?> options, String path) {
+            return new PresetOptions(
+                    path,
+                    optionalBoolean(options, "is_puppet"),
+                    optionalBoolean(options, "transient")
+            );
+        }
+    }
 }

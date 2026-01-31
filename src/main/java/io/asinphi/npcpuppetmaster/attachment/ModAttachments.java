@@ -9,6 +9,11 @@ import net.minecraft.resources.ResourceLocation;
 @SuppressWarnings("UnstableApiUsage")
 public class ModAttachments {
 
+    public static final AttachmentType<Boolean> IS_TRANSIENT = AttachmentRegistry.createPersistent(
+            ResourceLocation.fromNamespaceAndPath(NPCPuppetmaster.MOD_ID, "is_transient"),
+            Codec.BOOL
+    );
+
     public static final AttachmentType<Boolean> IS_PUPPET = AttachmentRegistry.createPersistent(
             ResourceLocation.fromNamespaceAndPath(NPCPuppetmaster.MOD_ID, "is_puppet"),
             Codec.BOOL

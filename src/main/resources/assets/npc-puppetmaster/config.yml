@@ -4,7 +4,14 @@ npcs_are_puppets_by_default: true
 
 # EasyNPC presets (in config/easy_npc) players can use with the /spawnpuppet command
 puppet_presets:
-  guard: "preset/humanoid_slim/guard.npc.nbt"
+  guard:
+    path: "preset/humanoid_slim/guard.npc.nbt"
+
+# Default options applied to puppets spawned with /spawnpuppet; override any of these in the presets above
+default_preset_options:
+  is_puppet: true
+  # Whether they should be removed when the chunks are unloaded
+  transient: true
 
 # Rate limit /spawnpuppet (per player)
 create_puppet_rate_limit:
