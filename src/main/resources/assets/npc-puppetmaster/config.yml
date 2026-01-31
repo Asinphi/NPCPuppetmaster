@@ -16,8 +16,8 @@ default_preset_options:
 # Rate limit /spawnpuppet (per player)
 create_puppet_rate_limit:
   # Set to -1 to disable rate limiting
-  max_puppets: 4
-  interval_seconds: 1800
+  max_puppets: 5
+  interval_seconds: 600
 
 # List of commands that will be executed by console when a player possesses an NPC puppet
 possession_commands:
