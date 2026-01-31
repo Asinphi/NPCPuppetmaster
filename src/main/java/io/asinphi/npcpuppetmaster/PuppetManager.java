@@ -81,7 +81,7 @@ public class PuppetManager {
         ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> {
             // Cancel possession on logout
             if (isPossessing(handler.player)) {
-                cancelPossession(handler.player, false);
+                server.execute(() -> cancelPossession(handler.player, false, true));
             }
         });
 
@@ -91,7 +91,7 @@ public class PuppetManager {
             for (UUID playerId : players) {
                 ServerPlayer player = server.getPlayerList().getPlayer(playerId);
                 if (player != null) {
-                    cancelPossession(player, false);
+                    cancelPossession(player, false, true);
                 }
             }
             activePossessions.clear();
@@ -524,6 +524,10 @@ public class PuppetManager {
     }
 
     public static void cancelPossession(ServerPlayer player, boolean wasForced) {
+        cancelPossession(player, wasForced, false);
+    }
+
+    public static void cancelPossession(ServerPlayer player, boolean wasForced, boolean isDisconnecting) {
         PossessionSession session = activePossessions.remove(player.getUUID());
         if (session == null) return;
 
@@ -551,7 +555,13 @@ public class PuppetManager {
                 // Teleport NPC to Player's CURRENT location
                 npc.teleportTo(player.serverLevel(), player.getX(), player.getY(), player.getZ(), Set.of(),
                         player.getYRot(), player.getXRot());
+            } else {
+                NPCPuppetmaster.LOGGER.error("Could not find NPC entity for player {} while canceling possession.",
+                        player.getName().getString());
             }
+        } else {
+            NPCPuppetmaster.LOGGER.error("Could not find NPC dimension for player {} while canceling possession.",
+                    player.getName().getString());
         }
 
         // Remove Dummy
@@ -559,23 +569,32 @@ public class PuppetManager {
             Entity dummyEntity = dummyLevel.getEntity(session.dummyUuid());
 
             if (dummyEntity instanceof PlayerDummyEntity dummy) {
-                player.teleportTo(dummyLevel, dummyEntity.getX(), dummyEntity.getY(), dummyEntity.getZ(),
-                        dummyEntity.getYRot(), dummyEntity.getXRot());
+                if (!isDisconnecting) {
+                    player.teleportTo(dummyLevel, dummyEntity.getX(), dummyEntity.getY(), dummyEntity.getZ(),
+                            dummyEntity.getYRot(), dummyEntity.getXRot());
+                } else {
+                    player.moveTo(dummyEntity.getX(), dummyEntity.getY(), dummyEntity.getZ(),
+                            dummyEntity.getYRot(), dummyEntity.getXRot());
+                    if (player.level() != dummyLevel) {
+                        player.setServerLevel(dummyLevel);
+                    }
+                }
                 dummy.discard();
                 setChunkLoaded(dummyLevel, player.position(), player.getUUID(), false);
+            } else {
+                NPCPuppetmaster.LOGGER.error("Could not find dummy entity for player {} while canceling possession.",
+                        player.getName().getString());
             }
+        } else {
+            NPCPuppetmaster.LOGGER.error("Could not find dummy dimension for player {} while canceling possession.",
+                    player.getName().getString());
         }
-
-        // Reset player avatar by removing the avatar override
-        EntityAvatarManager.clearAvatarFromEntity(player);
-
-        player.setHealth(session.originalHealth());
 
         // Restore Pehkui scales
         if (isPehkuiLoaded) {
             List<Float> originalPehkuiScales = session.originalPehkuiScales();
             int[] i = {0};
-            ScaleRegistries.SCALE_TYPES.forEach((id,scaleType) -> {
+            ScaleRegistries.SCALE_TYPES.forEach((id, scaleType) -> {
                 float originalScale = originalPehkuiScales.get(i[0]);
                 ScaleData data = scaleType.getScaleData(player);
                 data.setScale(originalScale);
@@ -583,15 +602,21 @@ public class PuppetManager {
             });
         }
 
-        if (!wasForced) {
-            Lang.send(player, "possess.end", Placeholder.parsed("target",
-                    entity != null ? entity.getName().getString() : "the NPC"));
-        } else {
-            Lang.send(player, "possess.forced_end", Placeholder.parsed("target",
-                    entity != null ? entity.getName().getString() : "the NPC"));
-        }
+        player.setHealth(session.originalHealth());
+
+        // Reset player avatar by removing the avatar override
+        EntityAvatarManager.clearAvatarFromEntity(player);
 
         dispatchCommands(Config.getUnpossessionCommands(), player, entity);
+
+        if (!isDisconnecting)
+            if (!wasForced) {
+                Lang.send(player, "possess.end", Placeholder.parsed("target",
+                        entity != null ? entity.getName().getString() : "the NPC"));
+            } else {
+                Lang.send(player, "possess.forced_end", Placeholder.parsed("target",
+                        entity != null ? entity.getName().getString() : "the NPC"));
+            }
     }
 
     /**
@@ -682,18 +707,20 @@ public class PuppetManager {
 
     private static void dispatchCommands(List<String> commands, ServerPlayer player, Entity npc) {
         for (String command : commands) {
+            command = command.replace("{player-uuid}", player.getStringUUID())
+                    .replace("{player}", player.getName().getString());
+            if (npc != null)
+                command = command.replace("{npc-uuid}", npc.getStringUUID())
+                        .replace("{npc}", npc.getName().getString());
             try {
-                command = command.replace("{player-uuid}", player.getStringUUID())
-                        .replace("{player}", player.getName().getString());
-                if (npc != null)
-                    command = command.replace("{npc-uuid}", npc.getStringUUID())
-                            .replace("{npc}", npc.getName().getString());
                 player.server.getCommands().getDispatcher().execute(
                         command,
                         player.server.createCommandSourceStack()
                 );
             } catch (CommandSyntaxException e) {
                 NPCPuppetmaster.LOGGER.error("Error executing command: {}", command, e);
+            } catch (RuntimeException e) {
+                NPCPuppetmaster.LOGGER.error("Runtime error executing command: {}", command, e);
             }
         }
     }
