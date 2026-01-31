@@ -176,6 +176,6 @@ public class SpawnPuppetCommand {
         long minutes = TimeUnit.MILLISECONDS.toMinutes(millis);
         long remainingSeconds = seconds % 60;
 
-        return String.format("%dm %ds", minutes, remainingSeconds);
+        return minutes + "m" + (remainingSeconds > 0 ? " " + remainingSeconds + "s" : "");
     }
 }
