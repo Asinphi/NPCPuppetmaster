@@ -21,9 +21,10 @@ public class EditPuppetCommand {
                 .requires(Permissions.require("npcp.edit", 2))
                 .then(Commands.argument("target", EasyNPCArgument.npc())
                         .then(Commands.literal("transient")
-                                .then(Commands.argument("enabled", BoolArgumentType.bool()))
+                                .then(Commands.argument("enabled", BoolArgumentType.bool())
                                         .executes(EditPuppetCommand::setIsTransient)
                                 )
+                        )
                         .then(Commands.literal("ispuppet")
                                 .then(Commands.argument("enabled", BoolArgumentType.bool())
                                         .executes(EditPuppetCommand::setIsPuppet)
@@ -52,7 +53,7 @@ public class EditPuppetCommand {
 
         Lang.send(context.getSource(), "commands.editpuppet.transient.success",
                 Placeholder.parsed("target", target.getName().getString()),
-                Placeholder.parsed("despawn", enabled ? "<yellow>despawn</green>" : "<green>never despawn</green>")
+                Placeholder.parsed("despawn", enabled ? "<yellow>despawn</yellow>" : "<green>never despawn</green>")
         );
 
         return 1;
