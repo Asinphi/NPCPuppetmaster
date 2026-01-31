@@ -16,6 +16,8 @@ import net.minecraft.commands.Commands;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.level.ClipContext;
+import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 
 import java.util.UUID;
@@ -51,12 +53,27 @@ public class SpawnPuppetCommand {
                             return builder.buildFuture();
                         })
                         .executes(SpawnPuppetCommand::spawnPuppet)
+                        .then(Commands.argument("location", StringArgumentType.string())
+                                .suggests((ctx, builder) -> {
+                                    builder.suggest("here");
+                                    builder.suggest("there");
+                                    return builder.buildFuture();
+                                })
+                                .executes(ctx -> {
+                                    String location = StringArgumentType.getString(ctx, "location");
+                                    return spawnPuppet(ctx, location);
+                                })
+                        )
                 )
         );
     }
 
-    @SuppressWarnings("UnstableApiUsage")
     private static int spawnPuppet(CommandContext<CommandSourceStack> ctx) {
+        return spawnPuppet(ctx, "here");
+    }
+
+    @SuppressWarnings("UnstableApiUsage")
+    private static int spawnPuppet(CommandContext<CommandSourceStack> ctx, String location) {
         CommandSourceStack source = ctx.getSource();
         ServerPlayer player = source.getPlayer();
         String presetName = StringArgumentType.getString(ctx, "preset");
@@ -87,9 +104,10 @@ public class SpawnPuppetCommand {
 
         // TODO Bump EasyNPC and use its newer importPreset method
         UUID npcUuid = UUID.randomUUID();
+        Vec3 spawnPos = resolveSpawnPosition(player, location);
         boolean success = PresetHandler.importCustomPreset(player.serverLevel(),
                 ResourceLocation.fromNamespaceAndPath("easy_npc", presetOptions.getPath()),
-                new Vec3(player.getX(), player.getY(), player.getZ()),
+                spawnPos,
                 npcUuid,
                 player);
 
@@ -109,6 +127,26 @@ public class SpawnPuppetCommand {
             );
             return 0;
         }
+    }
+
+    private static Vec3 resolveSpawnPosition(ServerPlayer player, String location) {
+        if ("there".equalsIgnoreCase(location)) {
+            Vec3 start = player.getEyePosition(1.0F);
+            Vec3 look = player.getViewVector(1.0F);
+            Vec3 end = start.add(look.scale(10.0D));
+            HitResult hit = player.level().clip(new ClipContext(
+                    start,
+                    end,
+                    ClipContext.Block.OUTLINE,
+                    ClipContext.Fluid.NONE,
+                    player
+            ));
+            if (hit.getType() != HitResult.Type.MISS) {
+                return hit.getLocation();
+            }
+            return end;
+        }
+        return new Vec3(player.getX(), player.getY(), player.getZ());
     }
 
     private static String getPresetsMiniMessage() {

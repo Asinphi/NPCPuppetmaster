@@ -24,7 +24,7 @@ commands:
       success: "<prefixes.success>NPC <yellow><target></yellow> now requires permission <yellow><permission></yellow> to be controlled."
 
   spawnpuppet:
-    success: "<prefixes.success>Puppet NPC <yellow><preset></yellow> has been spawned at your location."
+    success: "<prefixes.success>Puppet NPC <yellow><preset></yellow> has been spawned."
     rate_limited: "<prefixes.error>You have reached your puppet creation limit. You can create up to <yellow><max_count></yellow> puppets every <yellow><window></yellow>. Please wait <yellow><wait_time></yellow> before creating another puppet."
     failure: "<prefixes.error>An error occurred while trying to spawn puppet NPC <gray><preset></gray>."
     invalid_preset: "<prefixes.error>Invalid puppet preset '<gray><preset></gray>'. Click a valid preset: <yellow><valid_presets></yellow>."
