@@ -30,6 +30,11 @@ public class EditPuppetCommand {
                                         .executes(EditPuppetCommand::setIsPuppet)
                                 )
                         )
+                        .then(Commands.literal("owneronly")
+                                .then(Commands.argument("enabled", BoolArgumentType.bool())
+                                        .executes(EditPuppetCommand::setIsOwnerOnly)
+                                )
+                        )
                         .then(Commands.literal("permission")
                                 .then(Commands.literal("clear")
                                         .executes(EditPuppetCommand::clearPermission)
@@ -69,6 +74,22 @@ public class EditPuppetCommand {
         Lang.send(context.getSource(), "commands.editpuppet.is_puppet.success",
                 Placeholder.parsed("target", target.getName().getString()),
                 Placeholder.parsed("enabled", enabled ? "<green>enabled</green>" : "<red>disabled</red>")
+        );
+
+        return 1;
+    }
+
+    @SuppressWarnings("UnstableApiUsage")
+    private static int setIsOwnerOnly(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
+        Entity target = (Entity) EasyNPCArgument.getEntity(context, "target");
+        boolean enabled = BoolArgumentType.getBool(context, "enabled");
+
+        target.setAttached(ModAttachments.IS_OWNER_ONLY, enabled);
+
+        Lang.send(context.getSource(), "commands.editpuppet.owneronly.success",
+                Placeholder.parsed("target", target.getName().getString()),
+                Placeholder.parsed("only_by_owner", enabled ? "<red>exclusively by its owner</red>" :
+                        "<yellow>by anyone</yellow>")
         );
 
         return 1;

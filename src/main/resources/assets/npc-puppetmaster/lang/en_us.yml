@@ -19,6 +19,8 @@ commands:
       success: "<prefixes.success>NPC <yellow><target></yellow> will now <despawn> when chunks unload."
     is_puppet:
       success: "<prefixes.success>NPC <yellow><target></yellow> now has its puppet controls <enabled>."
+    owneronly:
+      success: "<prefixes.success>NPC <yellow><target></yellow> can now be controlled <only_by_owner>."
     permission:
       cleared: "<prefixes.success>NPC <yellow><target></yellow> no longer requires a special permission to control."
       success: "<prefixes.success>NPC <yellow><target></yellow> now requires permission <yellow><permission></yellow> to be controlled."
@@ -44,6 +46,7 @@ possess:
   not_possessing: "<prefixes.error>You are not currently possessing any NPC."
 
 not_a_puppet: "<prefixes.error>Target entity is not a controllable puppet NPC."
+owner_only: "<prefixes.error>This NPC can be controlled exclusively by its owner."
 no_permission: "<prefixes.error>You do not have permission to perform this operation."
 require_permission: "<prefixes.error>You require permission <yellow><permission></yellow> to perform this operation."
 

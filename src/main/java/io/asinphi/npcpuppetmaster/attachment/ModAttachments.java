@@ -19,6 +19,11 @@ public class ModAttachments {
             Codec.BOOL
     );
 
+    public static final AttachmentType<Boolean> IS_OWNER_ONLY = AttachmentRegistry.createPersistent(
+            ResourceLocation.fromNamespaceAndPath(NPCPuppetmaster.MOD_ID, "is_owner_only"),
+            Codec.BOOL
+    );
+
     // Default: Empty (No special permission required)
     public static final AttachmentType<String> REQUIRES_PERMISSION = AttachmentRegistry.createPersistent(
             ResourceLocation.fromNamespaceAndPath(NPCPuppetmaster.MOD_ID, "requires_permission"),

@@ -2,6 +2,10 @@
 # Either way, you can make an exception via /editpuppet <npcEntity> ispuppet <true|false>
 npcs_are_puppets_by_default: true
 
+# Whether Easy NPCs are controllable only by their owners by default
+# Either way, you can set this on a per-NPC basis via /editpuppet <npcEntity> owneronly <true|false>
+npcs_are_owner_only_by_default: false
+
 # EasyNPC presets (in config/easy_npc) players can use with the /spawnpuppet command
 puppet_presets:
   guard:

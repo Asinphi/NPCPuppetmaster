@@ -144,6 +144,7 @@ public class PuppetManager {
         return null;
     }
 
+    @SuppressWarnings("UnstableApiUsage")
     public static void openGui(ServerPlayer player, LivingEntity target) {
         // Check if target is a puppet
         Boolean isPuppetAttachment = target.getAttached(ModAttachments.IS_PUPPET);
@@ -153,6 +154,18 @@ public class PuppetManager {
         if (!isPuppet) {
             Lang.send(player, "not_a_puppet");
             return;
+        }
+
+        // Check owner-only attachment
+        if (target instanceof EasyNPC<?> npc) {
+            Boolean isOwnerOnlyAttachment = target.getAttached(ModAttachments.IS_OWNER_ONLY);
+            boolean isOwnerOnly = Boolean.TRUE.equals(isOwnerOnlyAttachment) ||
+                    !Boolean.FALSE.equals(isOwnerOnlyAttachment) &&
+                            Config.areNpcsOwnerOnlyByDefault();
+            if (isOwnerOnly && !npc.getEasyNPCOwnerData().isNPCOwner(player)) {
+                Lang.send(player, "owner_only");
+                return;
+            }
         }
 
         // Check special permission attachment
@@ -243,6 +256,18 @@ public class PuppetManager {
         if (!isPuppet) {
             Lang.send(player, "not_a_puppet");
             return;
+        }
+
+        // Check owner-only attachment
+        if (entity instanceof EasyNPC<?> npc) {
+            Boolean isOwnerOnlyAttachment = entity.getAttached(ModAttachments.IS_OWNER_ONLY);
+            boolean isOwnerOnly = Boolean.TRUE.equals(isOwnerOnlyAttachment) ||
+                    !Boolean.FALSE.equals(isOwnerOnlyAttachment) &&
+                            Config.areNpcsOwnerOnlyByDefault();
+            if (isOwnerOnly && !npc.getEasyNPCOwnerData().isNPCOwner(player)) {
+                Lang.send(player, "owner_only");
+                return;
+            }
         }
 
         String actionPermission = actionPermissions.get(action);

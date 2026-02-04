@@ -24,6 +24,7 @@ public final class Config {
     private static volatile Map<?, ?> yamlRoot = Map.of();
 
     private static boolean areNpcsPuppetsByDefault;
+    private static boolean areNpcsOwnerOnlyByDefault;
     private static Map<String, PresetOptions> puppetPresets;
     private static int createPuppetMaxCount;
     private static long createPuppetWindowMillis;
@@ -34,6 +35,10 @@ public final class Config {
 
     public static boolean areNpcsPuppetsByDefault () {
         return areNpcsPuppetsByDefault;
+    }
+
+    public static boolean areNpcsOwnerOnlyByDefault () {
+        return areNpcsOwnerOnlyByDefault;
     }
 
     public static Map<String, PresetOptions> getPuppetPresets() {
@@ -68,6 +73,7 @@ public final class Config {
         Map<?, ?> map = yamlRoot;
 
         areNpcsPuppetsByDefault = requireBoolean(map, "npcs_are_puppets_by_default");
+        areNpcsOwnerOnlyByDefault = requireBoolean(map, "npcs_are_owner_only_by_default");
         PresetOptions defaultPresetOptions = loadDefaultPresetOptions(map);
         puppetPresets = loadPuppetPresets(map, defaultPresetOptions);
         createPuppetMaxCount = requireInt((Map<?, ?>) map.get("create_puppet_rate_limit"), "max_puppets");
