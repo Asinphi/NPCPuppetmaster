@@ -280,8 +280,8 @@ public class PuppetManager {
 
         switch (action) {
             case DELETE -> {
-                mob.discard(); // remove() was renamed to discard() in recent mappings
-                player.sendSystemMessage(Component.literal("Entity removed."));
+                mob.discard();
+                Lang.send(player, "delete.success", Placeholder.parsed("target", entity.getName().getString()));
             }
             case MOVE_HERE -> {
                 // Pathfind to the player's current position

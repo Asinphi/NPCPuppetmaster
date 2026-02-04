@@ -33,6 +33,9 @@ commands:
   reload:
     completed: "<prefixes.success>Reload complete."
 
+delete:
+  success: "<prefixes.success>Puppet NPC <yellow><target></yellow> has been deleted."
+
 possess:
   success: "<prefixes.success>You are now possessing NPC <yellow><target></yellow>. Use <yellow>/unpossess</yellow> to stop possessing."
   no_avatar_override: "<prefixes.error>This NPC is not able to be possessed."
