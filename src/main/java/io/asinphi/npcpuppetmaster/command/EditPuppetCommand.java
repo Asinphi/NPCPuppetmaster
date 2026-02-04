@@ -56,9 +56,9 @@ public class EditPuppetCommand {
 
         target.setAttached(ModAttachments.IS_TRANSIENT, enabled);
 
-        Lang.send(context.getSource(), "commands.editpuppet.transient.success",
-                Placeholder.parsed("target", target.getName().getString()),
-                Placeholder.parsed("despawn", enabled ? "<yellow>despawn</yellow>" : "<green>never despawn</green>")
+        Lang.send(context.getSource(), enabled ? "commands.editpuppet.transient.enabled" :
+                        "commands.editpuppet.transient.disabled",
+                Placeholder.parsed("target", target.getName().getString())
         );
 
         return 1;
@@ -71,9 +71,9 @@ public class EditPuppetCommand {
 
         target.setAttached(ModAttachments.IS_PUPPET, enabled);
 
-        Lang.send(context.getSource(), "commands.editpuppet.is_puppet.success",
-                Placeholder.parsed("target", target.getName().getString()),
-                Placeholder.parsed("enabled", enabled ? "<green>enabled</green>" : "<red>disabled</red>")
+        Lang.send(context.getSource(), enabled ? "commands.editpuppet.ispuppet.enabled" :
+                        "commands.editpuppet.ispuppet.disabled",
+                Placeholder.parsed("target", target.getName().getString())
         );
 
         return 1;
@@ -86,10 +86,9 @@ public class EditPuppetCommand {
 
         target.setAttached(ModAttachments.IS_OWNER_ONLY, enabled);
 
-        Lang.send(context.getSource(), "commands.editpuppet.owneronly.success",
-                Placeholder.parsed("target", target.getName().getString()),
-                Placeholder.parsed("only_by_owner", enabled ? "<red>exclusively by its owner</red>" :
-                        "<yellow>by anyone</yellow>")
+        Lang.send(context.getSource(), enabled ? "commands.editpuppet.owneronly.enabled" :
+                        "commands.editpuppet.owneronly.disabled",
+                Placeholder.parsed("target", target.getName().getString())
         );
 
         return 1;

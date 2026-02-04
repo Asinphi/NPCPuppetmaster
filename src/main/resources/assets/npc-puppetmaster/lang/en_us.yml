@@ -16,11 +16,14 @@ commands:
 
   editpuppet:
     transient:
-      success: "<prefixes.success>NPC <yellow><target></yellow> will now <despawn> when chunks unload."
-    is_puppet:
-      success: "<prefixes.success>NPC <yellow><target></yellow> now has its puppet controls <enabled>."
+      enabled: "<prefixes.success>NPC <yellow><target></yellow> will now <yellow>despawn</yellow> when chunks unload."
+      disabled: "<prefixes.success>NPC <yellow><target></yellow> will now <green>never despawn</green> when chunks unload."
+    ispuppet:
+      enabled: "<prefixes.success>NPC <yellow><target></yellow> now has its puppet controls <green>enabled</green>."
+      disabled: "<prefixes.success>NPC <yellow><target></yellow> now has its puppet controls <red>disabled</red>."
     owneronly:
-      success: "<prefixes.success>NPC <yellow><target></yellow> can now be controlled <only_by_owner>."
+      enabled: "<prefixes.success>NPC <yellow><target></yellow> can now be controlled <red>exclusively by its owner</red>."
+      disabled: "<prefixes.success>NPC <yellow><target></yellow> can now be controlled <yellow>by anyone</yellow>."
     permission:
       cleared: "<prefixes.success>NPC <yellow><target></yellow> no longer requires a special permission to control."
       success: "<prefixes.success>NPC <yellow><target></yellow> now requires permission <yellow><permission></yellow> to be controlled."
