@@ -68,7 +68,6 @@ public class SpawnPuppetCommand {
         return spawnPuppet(ctx, "here");
     }
 
-    @SuppressWarnings("UnstableApiUsage")
     private static int spawnPuppet(CommandContext<CommandSourceStack> ctx, String location) {
         CommandSourceStack source = ctx.getSource();
         ServerPlayer player = source.getPlayer();
