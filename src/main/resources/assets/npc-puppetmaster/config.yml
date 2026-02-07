@@ -15,10 +15,14 @@ puppet_presets:
 # Familiars are personal puppets that players can create and customize via the /familiar command
 familiar_template_preset:
   path: "preset/humanoid_slim/puppet.npc.nbt"
+  # Whether it can only be controlled by the player who created it
+  owner_only: true
 
-# Default options applied to familiars and puppets spawned with /spawnpuppet; override any of these in the presets above
+# Default options applied to puppets spawned with /spawnpuppet; override any of these in the presets above
 default_preset_options:
   is_puppet: true
+  # Whether they can only be controlled by the player who spawned it
+  owner_only: false
   # Whether they should be removed when the chunks are unloaded
   transient: true
 

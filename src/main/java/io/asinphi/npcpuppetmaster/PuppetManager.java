@@ -134,6 +134,7 @@ public class PuppetManager {
                     npcUuid, level);
             if (spawnedEntity != null) {
                 spawnedEntity.setAttached(ModAttachments.IS_PUPPET, preset.isPuppet());
+                spawnedEntity.setAttached(ModAttachments.IS_OWNER_ONLY, preset.isOwnerOnly());
                 spawnedEntity.setAttached(ModAttachments.IS_TRANSIENT, preset.isTransient());
                 if (player != null)
                     recordSelection(player, spawnedEntity);

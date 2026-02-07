@@ -404,6 +404,7 @@ public final class FamiliarManager {
     @SuppressWarnings("UnstableApiUsage")
     private static void applyPresetDefaults(LivingEntity entity, Config.PresetOptions preset, ServerPlayer owner) {
         entity.setAttached(ModAttachments.IS_PUPPET, preset.isPuppet());
+        entity.setAttached(ModAttachments.IS_OWNER_ONLY, preset.isOwnerOnly());
         entity.setAttached(ModAttachments.IS_TRANSIENT, preset.isTransient());
         if (entity instanceof EasyNPC<?> easyNpc && owner != null) {
             easyNpc.getEasyNPCOwnerData().setNPCOwner(owner);

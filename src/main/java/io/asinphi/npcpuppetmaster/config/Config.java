@@ -268,7 +268,7 @@ public final class Config {
 
     private static PresetOptions parsePresetOptions(String context, Object rawPreset) {
         if (rawPreset instanceof String rawPath) {
-            return new PresetOptions(rawPath, null, null);
+            return new PresetOptions(rawPath, null, null, null);
         }
         if (rawPreset instanceof Map<?, ?> presetMap) {
             String path = requireString(presetMap, "path");
@@ -313,11 +313,13 @@ public final class Config {
     public static final class PresetOptions {
         private final String path;
         private final Boolean isPuppet;
+        private final Boolean isOwnerOnly;
         private final Boolean isTransient;
 
-        public PresetOptions(String path, Boolean isPuppet, Boolean isTransient) {
+        public PresetOptions(String path, Boolean isPuppet, Boolean isOwnerOnly, Boolean isTransient) {
             this.path = path;
             this.isPuppet = isPuppet;
+            this.isOwnerOnly = isOwnerOnly;
             this.isTransient = isTransient;
         }
 
@@ -329,6 +331,10 @@ public final class Config {
             return Boolean.TRUE.equals(isPuppet);
         }
 
+        public boolean isOwnerOnly() {
+            return Boolean.TRUE.equals(isOwnerOnly);
+        }
+
         public boolean isTransient() {
             return Boolean.TRUE.equals(isTransient);
         }
@@ -337,6 +343,7 @@ public final class Config {
             return new PresetOptions(
                     overrides.path != null ? overrides.path : this.path,
                     overrides.isPuppet != null ? overrides.isPuppet : this.isPuppet,
+                    overrides.isOwnerOnly != null ? overrides.isOwnerOnly : this.isOwnerOnly,
                     overrides.isTransient != null ? overrides.isTransient : this.isTransient
             );
         }
@@ -348,6 +355,9 @@ public final class Config {
             if (isPuppet == null) {
                 throw new IllegalStateException("Preset '" + presetName + "' is missing required option: is_puppet");
             }
+            if (isOwnerOnly == null) {
+                throw new IllegalStateException("Preset '" + presetName + "' is missing required option: owner_only");
+            }
             if (isTransient == null) {
                 throw new IllegalStateException("Preset '" + presetName + "' is missing required option: transient");
             }
@@ -358,6 +368,7 @@ public final class Config {
             return new PresetOptions(
                     path,
                     optionalBoolean(options, "is_puppet"),
+                    optionalBoolean(options, "owner_only"),
                     optionalBoolean(options, "transient")
             );
         }
