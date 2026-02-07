@@ -313,7 +313,19 @@ public class PuppetManager {
                 mob.getNavigation().moveTo(player, 1.0f);
             }
             case GO_AWAY -> {
-                // Simple logic: Pick a random spot 10 blocks away in the opposite direction
+                // If following, make it unfollow
+                if (mob instanceof EasyNPC<?> npc) {
+                    ObjectiveDataCapable<?> objectiveData = npc.getEasyNPCObjectiveData();
+                    if (objectiveData != null) {
+                        ObjectiveDataEntry followObjective = objectiveData.getObjective(
+                                ObjectiveType.FOLLOW_ENTITY_BY_UUID);
+                        if (followObjective != null) {
+                            objectiveData.removeCustomObjective(followObjective);
+                        }
+                    }
+                }
+
+                // Pick a random spot 10 blocks away in the opposite direction
                 Vec3 direction = mob.position().subtract(player.position()).normalize();
                 Vec3 target = mob.position().add(direction.scale(10.0));
                 mob.getNavigation().moveTo(target.x, target.y, target.z, 1.2f);
