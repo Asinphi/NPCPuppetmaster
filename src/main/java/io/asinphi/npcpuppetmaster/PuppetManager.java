@@ -331,6 +331,11 @@ public class PuppetManager {
                 if (objectiveData == null) {
                     return;
                 }
+                ObjectiveDataEntry existingObjective = objectiveData.getObjective(ObjectiveType.FOLLOW_ENTITY_BY_UUID);
+                if (existingObjective != null) {
+                    existingObjective.setTargetEntityUUID(player.getUUID());
+                    return;
+                }
                 ObjectiveDataEntry followObjective = new ObjectiveDataEntry(ObjectiveType.FOLLOW_ENTITY_BY_UUID);
                 followObjective.setTargetEntityUUID(player.getUUID());
                 // Use reflection to change the stop distance
