@@ -3,6 +3,7 @@ package io.asinphi.npcpuppetmaster;
 import io.asinphi.npcpuppetmaster.attachment.ModAttachments;
 import io.asinphi.npcpuppetmaster.command.EditPuppetCommand;
 import io.asinphi.npcpuppetmaster.command.FamiliarCommand;
+import io.asinphi.npcpuppetmaster.command.NpcpCommand;
 import io.asinphi.npcpuppetmaster.command.PuppeteerCommand;
 import io.asinphi.npcpuppetmaster.command.SpawnPuppetCommand;
 import io.asinphi.npcpuppetmaster.command.UnpossessCommand;
@@ -41,6 +42,7 @@ public class NPCPuppetmaster implements ModInitializer {
         CommandRegistrationCallback.EVENT.register(
                 (dispatcher,
                  registryAccess, environment) -> {
+                    NpcpCommand.register(dispatcher);
                     PuppeteerCommand.register(dispatcher);
                     EditPuppetCommand.register(dispatcher);
                     UnpossessCommand.register(dispatcher);
