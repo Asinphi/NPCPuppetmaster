@@ -4,7 +4,9 @@ import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.BoolArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
+import com.mojang.brigadier.suggestion.SuggestionProvider;
 import io.asinphi.npcavatar.avatar.EntityAvatarManager;
+import io.asinphi.npcpuppetmaster.attachment.ModAttachments;
 import io.asinphi.npcpuppetmaster.config.Config;
 import io.asinphi.npcpuppetmaster.config.Lang;
 import io.asinphi.npcpuppetmaster.familiar.FamiliarData;
@@ -89,17 +91,12 @@ public class FamiliarCommand {
                                                 ctx,
                                                 StringArgumentType.getString(ctx, "value"),
                                                 null))
-                                        .then(Commands.argument("id", StringArgumentType.string())
-                                                .suggests((ctx, builder) -> {
-                                                    for (String id : FamiliarManager.getFamiliars(ctx.getSource().getPlayerOrException()).keySet()) {
-                                                        builder.suggest(id);
-                                                    }
-                                                    return builder.buildFuture();
-                                                })
-                                                .executes(ctx -> handleEditName(
-                                                        ctx,
-                                                        StringArgumentType.getString(ctx, "value"),
-                                                        StringArgumentType.getString(ctx, "id")))
+                                .then(Commands.argument("id", StringArgumentType.string())
+                                        .suggests(familiarIdSuggestions())
+                                        .executes(ctx -> handleEditName(
+                                                ctx,
+                                                StringArgumentType.getString(ctx, "value"),
+                                                StringArgumentType.getString(ctx, "id")))
                                         )
                                 )
                         )
@@ -109,32 +106,37 @@ public class FamiliarCommand {
                                                 ctx,
                                                 BoolArgumentType.getBool(ctx, "enabled"),
                                                 null))
-                                        .then(Commands.argument("id", StringArgumentType.string())
-                                                .suggests((ctx, builder) -> {
-                                                    for (String id : FamiliarManager.getFamiliars(ctx.getSource().getPlayerOrException()).keySet()) {
-                                                        builder.suggest(id);
-                                                    }
-                                                    return builder.buildFuture();
-                                                })
-                                                .executes(ctx -> handleEditAutospawn(
-                                                        ctx,
-                                                        BoolArgumentType.getBool(ctx, "enabled"),
-                                                        StringArgumentType.getString(ctx, "id")))
+                                .then(Commands.argument("id", StringArgumentType.string())
+                                        .suggests(familiarIdSuggestions())
+                                        .executes(ctx -> handleEditAutospawn(
+                                                ctx,
+                                                BoolArgumentType.getBool(ctx, "enabled"),
+                                                StringArgumentType.getString(ctx, "id")))
                                         )
                                 )
                         )
                         .then(Commands.literal("avatar")
                                 .executes(ctx -> handleEditAvatar(ctx, null))
                                 .then(Commands.argument("id", StringArgumentType.string())
-                                        .suggests((ctx, builder) -> {
-                                            for (String id : FamiliarManager.getFamiliars(ctx.getSource().getPlayerOrException()).keySet()) {
-                                                builder.suggest(id);
-                                            }
-                                            return builder.buildFuture();
-                                        })
+                                        .suggests(familiarIdSuggestions())
                                         .executes(ctx -> handleEditAvatar(
                                                 ctx,
                                                 StringArgumentType.getString(ctx, "id")))
+                                )
+                        )
+                        .then(Commands.literal("exclusive")
+                                .then(Commands.argument("enabled", BoolArgumentType.bool())
+                                        .executes(ctx -> handleEditExclusive(
+                                                ctx,
+                                                BoolArgumentType.getBool(ctx, "enabled"),
+                                                null))
+                                        .then(Commands.argument("id", StringArgumentType.string())
+                                                .suggests(familiarIdSuggestions())
+                                                .executes(ctx -> handleEditExclusive(
+                                                        ctx,
+                                                        BoolArgumentType.getBool(ctx, "enabled"),
+                                                        StringArgumentType.getString(ctx, "id")))
+                                        )
                                 )
                         )
                 )
@@ -349,6 +351,33 @@ public class FamiliarCommand {
         return 1;
     }
 
+    @SuppressWarnings("UnstableApiUsage")
+    private static int handleEditExclusive(CommandContext<CommandSourceStack> ctx, boolean enabled, String id) {
+        CommandSourceStack source = ctx.getSource();
+        ServerPlayer player = source.getPlayer();
+        if (player == null) return 0;
+
+        String targetId = resolveSpawnedIdOrPrompt(source, player, id, ctx.getInput());
+        if (targetId == null) return 0;
+
+        var entity = FamiliarManager.getSpawnedEntity(player, targetId);
+        if (entity == null) {
+            Lang.send(source, "commands.familiar.not_spawned",
+                    Placeholder.unparsed("id", targetId));
+            return 0;
+        }
+
+        entity.setAttached(ModAttachments.IS_OWNER_ONLY, enabled);
+        FamiliarManager.updateStoredPreset(player, targetId, entity);
+
+        if (enabled) {
+            Lang.send(source, "commands.familiar.exclusive_enabled", Placeholder.unparsed("id", targetId));
+        } else {
+            Lang.send(source, "commands.familiar.exclusive_disabled", Placeholder.unparsed("id", targetId));
+        }
+        return 1;
+    }
+
     private static String resolveSpawnedIdOrPrompt(CommandSourceStack source, ServerPlayer player, String id,
                                                    String command) {
         List<String> spawned = FamiliarManager.getSpawnedIds(player);
@@ -388,6 +417,15 @@ public class FamiliarCommand {
 
     private static String getSuggestCommand(String command, String label) {
         return "<click:suggest_command:'" + command + "'><yellow>" + label + "</yellow></click>";
+    }
+
+    private static SuggestionProvider<CommandSourceStack> familiarIdSuggestions() {
+        return (ctx, builder) -> {
+            for (String id : FamiliarManager.getFamiliars(ctx.getSource().getPlayerOrException()).keySet()) {
+                builder.suggest(id);
+            }
+            return builder.buildFuture();
+        };
     }
 
     private static String escapeMiniMessage(String input) {

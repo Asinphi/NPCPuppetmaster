@@ -45,7 +45,8 @@ commands:
       <click:suggest_command:'/familiar erase '><hover:show_text:'<white>/familiar erase <gold><id></gold></white><newline><newline><gray>Permanently delete a familiar. If you just want to despawn it, use the delete button in the puppeteer GUI.</gray>'><#ad60e0>  /familiar erase</#ad60e0> <gray>-</gray> <white>Permanently delete a familiar.</white></hover></click>
       <click:suggest_command:'/familiar edit name '><hover:show_text:'<white>/familiar edit name <gold><value></gold> <#ad60e0>[id]</#ad60e0></white><newline><newline><gray>Change a familiar\'s display name.</gray>'><#ad60e0>  /familiar edit name</#ad60e0> <gray>-</gray> <white>Rename a familiar.</white></hover></click>
       <click:suggest_command:'/familiar edit autospawn '><hover:show_text:'<white>/familiar edit autospawn <gold><true|false></gold> <#ad60e0>[id]</#ad60e0></white><newline><newline><gray>Choose whether the familiar automatically spawns nearby when you log in.</gray>'><#ad60e0>  /familiar edit autospawn</#ad60e0> <gray>-</gray> <white>Toggle autospawn.</white></hover></click>
-      <click:suggest_command:'/familiar edit avatar'><hover:show_text:'<white>/familiar edit avatar <#ad60e0>[id]</#ad60e0></white><newline><newline><gray>Use your current avatar on a familiar.</gray>'><#ad60e0>  /familiar edit avatar</#ad60e0> <gray>-</gray> <white>Apply your current avatar.</white></hover></click>
+      <click:suggest_command:'/familiar edit exclusive '><hover:show_text:'<white>/familiar edit exclusive <gold><true|false></gold> <#ad60e0>[id]</#ad60e0></white><newline><newline><gray>Choose whether only you can control the familiar.</gray>'><#ad60e0>  /familiar edit exclusive</#ad60e0> <gray>-</gray> <white>Toggle owner-only control.</white></hover></click>
+      <click:suggest_command:'/familiar edit avatar'><hover:show_text:'<white>/familiar edit avatar <#ad60e0>[id]</#ad60e0></white><newline><newline><gray>Change your familiar\'s avatar to become your current Figura avatar.</gray>'><#ad60e0>  /familiar edit avatar</#ad60e0> <gray>-</gray> <white>Apply your current avatar.</white></hover></click>
 
     create_success: "<prefixes.success>Familiar <yellow><id></yellow> created as <white><name></white>."
     create_exists: "<prefixes.error>You already have a familiar named <yellow><id></yellow>."
@@ -68,6 +69,8 @@ commands:
     edit_avatar_success: "<prefixes.success>Familiar <yellow><id></yellow> now uses your current avatar."
     autospawn_enabled: "<prefixes.success>Familiar <yellow><id></yellow> will now autospawn."
     autospawn_disabled: "<prefixes.success>Familiar <yellow><id></yellow> will no longer autospawn."
+    exclusive_enabled: "<prefixes.success>Familiar <yellow><id></yellow> can now be controlled <red>exclusively by its owner</red>."
+    exclusive_disabled: "<prefixes.success>Familiar <yellow><id></yellow> can now be controlled <yellow>by anyone</yellow>."
 
   reload:
     completed: "<prefixes.success>Reload complete."
