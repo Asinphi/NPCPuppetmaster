@@ -11,7 +11,12 @@ puppet_presets:
   guard:
     path: "preset/humanoid_slim/guard.npc.nbt"
 
-# Default options applied to puppets spawned with /spawnpuppet; override any of these in the presets above
+# The EasyNPC preset (in config/easy_npc) to use for the base familiar template
+# Familiars are personal puppets that players can create and customize via the /familiar command
+familiar_template_preset:
+  path: "preset/humanoid_slim/puppet.npc.nbt"
+
+# Default options applied to familiars and puppets spawned with /spawnpuppet; override any of these in the presets above
 default_preset_options:
   is_puppet: true
   # Whether they should be removed when the chunks are unloaded
@@ -22,6 +27,13 @@ create_puppet_rate_limit:
   # Set to -1 to disable rate limiting
   max_puppets: 5
   interval_seconds: 600
+
+# Maximum number of familiars a player can have
+max_familiar_slots:
+  # Players cannot create more familiars than this number
+  total: 2
+  # Players cannot have more than this many familiars spawned in all at once
+  spawned: 2
 
 # List of commands that will be executed by console when a player possesses an NPC puppet
 possession_commands:

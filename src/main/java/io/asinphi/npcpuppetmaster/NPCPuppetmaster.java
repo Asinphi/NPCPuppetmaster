@@ -2,13 +2,16 @@ package io.asinphi.npcpuppetmaster;
 
 import io.asinphi.npcpuppetmaster.attachment.ModAttachments;
 import io.asinphi.npcpuppetmaster.command.EditPuppetCommand;
+import io.asinphi.npcpuppetmaster.command.FamiliarCommand;
 import io.asinphi.npcpuppetmaster.command.PuppeteerCommand;
 import io.asinphi.npcpuppetmaster.command.SpawnPuppetCommand;
 import io.asinphi.npcpuppetmaster.command.UnpossessCommand;
 import io.asinphi.npcpuppetmaster.config.Config;
 import io.asinphi.npcpuppetmaster.config.Lang;
 import io.asinphi.npcpuppetmaster.entity.ModEntities;
+import io.asinphi.npcpuppetmaster.familiar.FamiliarManager;
 import io.asinphi.npcpuppetmaster.networking.ServerNetworking;
+import io.asinphi.npcpuppetmaster.util.TaskScheduler;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import org.slf4j.Logger;
@@ -27,12 +30,14 @@ public class NPCPuppetmaster implements ModInitializer {
 		// This code runs as soon as Minecraft is in a mod-load-ready state.
 		// However, some things (like resources) may still be uninitialized.
 		// Proceed with mild caution.
+        TaskScheduler.init();
         ModEntities.init();
         ModAttachments.init();
         ServerNetworking.init();
         Lang.init();
         Config.load();
         PuppetManager.init();
+        FamiliarManager.init();
         CommandRegistrationCallback.EVENT.register(
                 (dispatcher,
                  registryAccess, environment) -> {
@@ -40,6 +45,7 @@ public class NPCPuppetmaster implements ModInitializer {
                     EditPuppetCommand.register(dispatcher);
                     UnpossessCommand.register(dispatcher);
                     SpawnPuppetCommand.register(dispatcher);
+                    FamiliarCommand.register(dispatcher);
                 }
         );
 	}

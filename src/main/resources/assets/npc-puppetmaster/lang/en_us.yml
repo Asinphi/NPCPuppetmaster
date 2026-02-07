@@ -35,6 +35,41 @@ commands:
     invalid_preset: "<prefixes.error>Invalid puppet preset '<gray><preset></gray>'. Click a valid preset: <yellow><valid_presets></yellow>."
     presets_list: "<prefixes.info>Click a puppet preset: <yellow><presets></yellow>."
 
+  familiar:
+    help: |-
+      <#4e46c2><strikethrough>                          </strikethrough></#4e46c2> <#ad60e0>Familiars</#ad60e0> <#4e46c2><strikethrough>                          </strikethrough></#4e46c2>
+      <gray><italic>    Hover a command for extra info, click to run.</italic></gray>
+
+      <click:suggest_command:'/familiar create '><hover:show_text:'<white>/familiar create <gold><id></gold> <#ad60e0>[displayName]</#ad60e0></white><newline><newline><gray>Create a new familiar using the base template. Your current Figura avatar will automatically be applied to them.</gray>'><#ad60e0>  /familiar create</#ad60e0> <gray>-</gray> <white>Create a new familiar.</white></hover></click>
+      <click:run_command:'/familiar list'><hover:show_text:'<white>/familiar list</white><newline><newline><gray>List your saved familiars.</gray>'><#ad60e0>  /familiar list</#ad60e0> <gray>-</gray> <white>List your saved familiars.</white></hover></click>
+      <click:suggest_command:'/familiar spawn '><hover:show_text:'<white>/familiar spawn <#ad60e0>[id]</#ad60e0></white><newline><newline><gray>Spawn one of your familiars. You cannot spawn multiple copies of the same familiar.</gray>'><#ad60e0>  /familiar spawn</#ad60e0> <gray>-</gray> <white>Spawn a familiar.</white></hover></click>
+      <click:suggest_command:'/familiar erase '><hover:show_text:'<white>/familiar erase <gold><id></gold></white><newline><newline><gray>Permanently delete a familiar. If you just want to despawn it, use the delete button in the puppeteer GUI.</gray>'><#ad60e0>  /familiar erase</#ad60e0> <gray>-</gray> <white>Permanently delete a familiar.</white></hover></click>
+      <click:suggest_command:'/familiar edit name '><hover:show_text:'<white>/familiar edit name <gold><value></gold> <#ad60e0>[id]</#ad60e0></white><newline><newline><gray>Change a familiar''s display name.</gray>'><#ad60e0>  /familiar edit name</#ad60e0> <gray>-</gray> <white>Rename a familiar.</white></hover></click>
+      <click:suggest_command:'/familiar edit autospawn '><hover:show_text:'<white>/familiar edit autospawn <gold><true|false></gold> <#ad60e0>[id]</#ad60e0></white><newline><newline><gray>Choose whether the familiar automatically spawns nearby when you log in.</gray>'><#ad60e0>  /familiar edit autospawn</#ad60e0> <gray>-</gray> <white>Toggle autospawn.</white></hover></click>
+      <click:suggest_command:'/familiar edit avatar'><hover:show_text:'<white>/familiar edit avatar <#ad60e0>[id]</#ad60e0></white><newline><newline><gray>Use your current avatar on a familiar.</gray>'><#ad60e0>  /familiar edit avatar</#ad60e0> <gray>-</gray> <white>Apply your current avatar.</white></hover></click>
+
+    create_success: "<prefixes.success>Familiar <yellow><id></yellow> created as <white><name></white>."
+    create_exists: "<prefixes.error>You already have a familiar named <yellow><id></yellow>."
+    create_failed: "<prefixes.error>Failed to create familiar <yellow><id></yellow>."
+    create_max_total: "<prefixes.error>You have reached the maximum number of familiars (<yellow><max></yellow>)."
+    list_empty: "<prefixes.info>You don't have any saved familiars yet."
+    list: "<prefixes.info>Your familiars:<newline><entries>"
+    missing: "<prefixes.error>No familiar found with id <yellow><id></yellow>."
+    erase_confirm: "<prefixes.warn>This will permanently delete <yellow><id></yellow>. If you just want to remove the entity, use the puppeteer control GUI.<newline><prefixes.question>Click to confirm: <command>."
+    erase_success: "<prefixes.success>Familiar <yellow><id></yellow> has been permanently deleted."
+    none_saved: "<prefixes.error>You don't have any saved familiars."
+    none_spawned: "<prefixes.error>You don't have any familiars spawned in."
+    spawn_choose: "<prefixes.info>Click a familiar to spawn: <yellow><options></yellow>."
+    spawn_already: "<prefixes.info>Familiar <yellow><id></yellow> is already spawned."
+    spawn_failed: "<prefixes.error>Failed to spawn familiar <yellow><id></yellow>."
+    spawn_success: "<prefixes.success>Familiar <yellow><id></yellow> spawned as <white><name></white>."
+    not_spawned: "<prefixes.error>Familiar <yellow><id></yellow> isn't currently spawned."
+    edit_choose: "<prefixes.info>Click a familiar to edit: <yellow><options></yellow>."
+    edit_name_success: "<prefixes.success>Familiar <yellow><id></yellow> renamed to <white><name></white>."
+    edit_avatar_success: "<prefixes.success>Familiar <yellow><id></yellow> now uses your current avatar."
+    autospawn_enabled: "<prefixes.success>Familiar <yellow><id></yellow> will now autospawn."
+    autospawn_disabled: "<prefixes.success>Familiar <yellow><id></yellow> will no longer autospawn."
+
   reload:
     completed: "<prefixes.success>Reload complete."
 

@@ -25,9 +25,13 @@ public final class Config {
 
     private static boolean areNpcsPuppetsByDefault;
     private static boolean areNpcsOwnerOnlyByDefault;
+    private static PresetOptions defaultPresetOptions;
     private static Map<String, PresetOptions> puppetPresets;
+    private static PresetOptions familiarTemplatePreset;
     private static int createPuppetMaxCount;
     private static long createPuppetWindowMillis;
+    private static int maxFamiliarTotal;
+    private static int maxFamiliarSpawned;
     private static List<String> possessionCommands;
     private static List<String> unpossessionCommands;
     private static boolean isDebugEnabled;
@@ -45,12 +49,28 @@ public final class Config {
         return puppetPresets;
     }
 
+    public static PresetOptions getFamiliarTemplatePreset() {
+        return familiarTemplatePreset;
+    }
+
+    public static PresetOptions getDefaultPresetOptions() {
+        return defaultPresetOptions;
+    }
+
     public static int getCreatePuppetMaxCount() {
         return createPuppetMaxCount;
     }
 
     public static long getCreatePuppetWindowMillis() {
         return createPuppetWindowMillis;
+    }
+
+    public static int getMaxFamiliarTotal() {
+        return maxFamiliarTotal;
+    }
+
+    public static int getMaxFamiliarSpawned() {
+        return maxFamiliarSpawned;
     }
 
     public static List<String> getPossessionCommands() {
@@ -74,11 +94,15 @@ public final class Config {
 
         areNpcsPuppetsByDefault = requireBoolean(map, "npcs_are_puppets_by_default");
         areNpcsOwnerOnlyByDefault = requireBoolean(map, "npcs_are_owner_only_by_default");
-        PresetOptions defaultPresetOptions = loadDefaultPresetOptions(map);
+        defaultPresetOptions = loadDefaultPresetOptions(map);
         puppetPresets = loadPuppetPresets(map, defaultPresetOptions);
+        familiarTemplatePreset = loadSinglePreset(map, "familiar_template_preset", defaultPresetOptions);
         createPuppetMaxCount = requireInt((Map<?, ?>) map.get("create_puppet_rate_limit"), "max_puppets");
         createPuppetWindowMillis = requireInt((Map<?, ?>) map.get("create_puppet_rate_limit"),
                 "interval_seconds") * 1000L;
+        Map<?, ?> familiarSlots = requireMap(map, "max_familiar_slots");
+        maxFamiliarTotal = requireInt(familiarSlots, "total");
+        maxFamiliarSpawned = requireInt(familiarSlots, "spawned");
         possessionCommands = requireStringList(map, "possession_commands");
         unpossessionCommands = requireStringList(map, "unpossession_commands");
         isDebugEnabled = requireBoolean(map, "enable_debug");
@@ -227,30 +251,39 @@ public final class Config {
             if (!(entry.getKey() instanceof String presetName)) {
                 throw new IllegalStateException("puppet_presets keys must be strings (got " + entry.getKey() + ")");
             }
-
-            PresetOptions presetOptions;
-            Object rawPreset = entry.getValue();
-            if (rawPreset instanceof String rawPath) {
-                presetOptions = new PresetOptions(rawPath, null, null);
-            } else if (rawPreset instanceof Map<?, ?> presetMap) {
-                String path = requireString(presetMap, "path");
-                Map<?, ?> optionsMap = presetMap;
-                Object optionsRaw = presetMap.get("options");
-                if (optionsRaw != null) {
-                    if (optionsRaw instanceof Map<?, ?> nestedOptions) {
-                        optionsMap = nestedOptions;
-                    } else {
-                        throw new IllegalStateException("Config key 'options' in preset '" + presetName + "' must be a map (got " + optionsRaw + ")");
-                    }
-                }
-                presetOptions = PresetOptions.fromOptions(optionsMap, path);
-            } else {
-                throw new IllegalStateException("puppet_presets entries must be a string path or map (got " + rawPreset + ")");
-            }
-
+            PresetOptions presetOptions = parsePresetOptions("puppet_presets." + presetName, entry.getValue());
             result.put(presetName, defaults.merge(presetOptions).requireComplete(presetName));
         }
         return result;
+    }
+
+    private static PresetOptions loadSinglePreset(Map<?, ?> map, String key, PresetOptions defaults) {
+        Object raw = map.get(key);
+        if (raw == null) {
+            throw new IllegalStateException("Missing required config key: " + key);
+        }
+        PresetOptions presetOptions = parsePresetOptions(key, raw);
+        return defaults.merge(presetOptions).requireComplete(key);
+    }
+
+    private static PresetOptions parsePresetOptions(String context, Object rawPreset) {
+        if (rawPreset instanceof String rawPath) {
+            return new PresetOptions(rawPath, null, null);
+        }
+        if (rawPreset instanceof Map<?, ?> presetMap) {
+            String path = requireString(presetMap, "path");
+            Map<?, ?> optionsMap = presetMap;
+            Object optionsRaw = presetMap.get("options");
+            if (optionsRaw != null) {
+                if (optionsRaw instanceof Map<?, ?> nestedOptions) {
+                    optionsMap = nestedOptions;
+                } else {
+                    throw new IllegalStateException("Config key 'options' in '" + context + "' must be a map (got " + optionsRaw + ")");
+                }
+            }
+            return PresetOptions.fromOptions(optionsMap, path);
+        }
+        throw new IllegalStateException("Config key '" + context + "' must be a string path or map (got " + rawPreset + ")");
     }
 
     private static void ensureDefaults() {
